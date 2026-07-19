@@ -61,30 +61,16 @@ class MMTestCase(unittest.TestCase):
 
 
 class TestItemTag(MMTestCase):
-    def test_shows_track_group_and_gate(self):
-        books = {
-            "books": [{"id": 2, "title": "CS201", "pages": 500, "page": 0,
-                       "status": "queued", "group": "cs-core"}],
-            "next_id": 3, "daily_units": 2,
-        }
-        with open(mm.BOOKS_PATH, "w", encoding="utf-8") as f:
-            json.dump(books, f)
-        item = {"id": 1, "text": "📖 [2] CS201 (0/500p)", "track": "books",
-                "gate": True, "ref": 2, "group": "cs-core"}
-        tag = mm.item_tag(item, books)
-        self.assertIn("books", tag)
-        self.assertIn("group:cs-core", tag)
-        self.assertIn("gate", tag)
+    def test_clean_item_has_no_tag_noise(self):
+        # A normal gate item shows nothing extra — track/group/gate are section context.
+        item = {"id": 1, "text": "CS201  0/500p", "track": "books", "gate": True}
+        self.assertEqual(mm.item_tag(item), "")
 
-    def test_group_lookup_from_ref_when_missing_on_item(self):
-        books = {
-            "books": [{"id": 2, "title": "CS201", "pages": 500, "page": 0,
-                       "status": "queued", "group": "cs-core"}],
-            "next_id": 3, "daily_units": 2,
-        }
-        item = {"id": 1, "text": "📖 [2] CS201", "track": "books", "gate": True, "ref": 2}
-        tag = mm.item_tag(item, books)
-        self.assertIn("group:cs-core", tag)
+    def test_blocked_and_suspended_states_show(self):
+        self.assertIn("blocked: waiting on API",
+                      mm.item_tag({"id": 1, "text": "x", "blocked": True,
+                                   "blocked_reason": "waiting on API"}))
+        self.assertIn("suspended", mm.item_tag({"id": 2, "text": "y", "suspended": True}))
 
 
 class TestUniversalTracks(MMTestCase):
@@ -250,7 +236,7 @@ class TestRobustness(MMTestCase):
     def test_missing_rules_disables_onboard_without_crashing(self):
         # No rules file at all → onboard queues nothing, no traceback.
         out = self.cli("onboard")
-        self.assertIn("Onboarded", out)
+        self.assertIn("onboarded", out.lower())
         self.assertEqual(self.state()["queue"], [])
 
 

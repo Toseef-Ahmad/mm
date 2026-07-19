@@ -92,6 +92,23 @@ MUTATORS_LABEL = {
 }
 
 
+# ---------- minimal output styling ----------
+# Color only when writing to a real terminal, and never when NO_COLOR is set —
+# so piping, redirecting, and tests stay plain text.
+_COLOR = sys.stdout.isatty() and not os.environ.get("NO_COLOR") and os.environ.get("TERM") != "dumb"
+
+
+def _paint(s, code):
+    return f"\033[{code}m{s}\033[0m" if _COLOR else s
+
+
+def dim(s):      return _paint(s, "2")
+def bold(s):     return _paint(s, "1")
+def accent(s):   return _paint(s, "36")   # cyan — the active item
+def good(s):     return _paint(s, "32")   # green — done
+def warn(s):     return _paint(s, "33")   # yellow — interrupt / caution
+
+
 def now_iso():
     return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
 
@@ -316,25 +333,21 @@ def elapsed_str(started_at):
 
 
 def item_tag(item, books_data=None):
-    tags = []
-    if item.get("track"):
-        tags.append(item["track"])
-    grp = item.get("group")
-    if not grp and item.get("ref") is not None:
-        if books_data is None:
-            books_data = load_books()
-        book = find_book(books_data, item["ref"])
-        if book:
-            grp = book.get("group")
-    if grp:
-        tags.append(f"group:{grp}")
+    """Only the state that matters at a glance — blocked / suspended. Track,
+    group and gate are shown by section context, not repeated on every line."""
+    states = []
     if item.get("blocked"):
-        tags.append(f"blocked: {item['blocked_reason']}" if item.get("blocked_reason") else "blocked")
+        states.append(f"blocked: {item['blocked_reason']}" if item.get("blocked_reason") else "blocked")
     if item.get("suspended"):
-        tags.append("suspended")
-    if is_gate_item(item):
-        tags.append("gate")
-    return ("  [" + ", ".join(tags) + "]") if tags else ""
+        states.append("suspended")
+    return dim("  · " + ", ".join(states)) if states else ""
+
+
+def fmt_line(item, active=False, books_data=None):
+    """One task, rendered clean: a marker, a dim id, the text, subtle state."""
+    marker = accent("→") if active else " "
+    idcol = dim(f"{item['id']:>2}")
+    return f"  {marker} {idcol}  {item['text']}{item_tag(item, books_data)}"
 
 
 # ---------- commands ----------
@@ -366,42 +379,42 @@ def cmd_add(state, args):
         item["_from"] = container
         state["backlog"].append(item)
         log_event(state, f"add over capacity → backlog ({container}): [{item['id']}] {text}")
-        print(f"📥 {container} full ({maxn}) — parked in backlog [{item['id']}]: {text}")
-        print("   It'll resurface automatically as space frees, or `mm backlog --promote`.")
+        print(f"  {warn('~')} {container} full ({maxn}) — parked in backlog  {dim(str(item['id']))}  {text}")
+        print(dim("    resurfaces automatically as space frees (or: mm backlog --promote)"))
         return
 
     if container == "stack":
         state["stack"].append(item)
         log_event(state, f"pushed to interrupt stack: [{item['id']}] {text}")
-        print(f"⚡ Interrupt pushed [{item['id']}]: {text}")
+        print(f"  {warn('!')} interrupt  {dim(str(item['id']))}  {text}")
     elif container == "quick":
         state["quick"].append(item)
         log_event(state, f"added to quick queue: [{item['id']}] {text}")
-        print(f"⏱  Quick-queued [{item['id']}]: {text}")
+        print(f"  {dim('+')} quick  {dim(str(item['id']))}  {text}")
     else:
         state["queue"].append(item)
         log_event(state, f"enqueued: [{item['id']}] {text}")
-        print(f"➕ Queued [{item['id']}]: {text}")
+        print(f"  {good('+')} queued  {dim(str(item['id']))}  {text}")
 
 
 def cmd_next(state, _args):
     for it in promote_backlog(state, load_rules()):
-        print(f"⬆️  Promoted from backlog [{it['id']}]: {it['text']}")
+        print(dim(f"  ↑ promoted from backlog  {it['id']}  {it['text']}"))
     kind, _idx, item = find_active(state)
     if item:
         mark_active(state, item)
         el = elapsed_str(state["active"]["started_at"])
-        label = "INTERRUPT" if kind == "stack" else "NEXT"
-        print(f"{'⚡' if kind == 'stack' else '➡️ '} {label} [{item['id']}] ({el} active): {item['text']}{item_tag(item, load_books())}")
+        note = warn("interrupt") if kind == "stack" else dim(f"{el} active")
+        print(f"\n{fmt_line(item, active=True, books_data=load_books())}   {note}\n")
     else:
         state["active"] = None
         stuck_n = sum(1 for it in state["stack"] + state["queue"] if it.get("blocked") or it.get("suspended"))
         if stuck_n:
-            print(f"Nothing active left. {stuck_n} item(s) blocked/suspended — mm status to see them.")
+            print(f"\n  {dim('nothing active —')} {stuck_n} blocked/suspended {dim('(mm status)')}\n")
         else:
-            print("Queue and stack both empty. Clear.")
+            print(f"\n  {good('all clear')} {dim('— queue and stack empty')}\n")
     if state["quick"]:
-        print(f"   ({len(state['quick'])} quick task(s) waiting — flush at your next checkpoint, not now)")
+        print(dim(f"  {len(state['quick'])} quick waiting — flush at a checkpoint (mm flush-quick)"))
 
 
 def cmd_peek(state, _args):
@@ -410,15 +423,16 @@ def cmd_peek(state, _args):
     if item:
         started = state["active"]["started_at"] if (state["active"] and state["active"]["id"] == item["id"]) else None
         el = elapsed_str(started) if started else "not started"
-        label = "INTERRUPT" if kind == "stack" else "NEXT"
-        print(f"{'⚡' if kind == 'stack' else '➡️ '} {label} [{item['id']}] ({el}): {item['text']}{item_tag(item, load_books())}")
+        note = warn("interrupt") if kind == "stack" else dim(el)
+        print(f"\n{fmt_line(item, active=True, books_data=load_books())}   {note}")
     else:
-        print("Nothing active.")
+        print(f"\n  {dim('nothing active')}")
     upcoming = [it for it in state["queue"] if not it.get("blocked") and not it.get("suspended")][:3]
-    if len(upcoming) > 1:
-        print("   Then: " + ", ".join(f"[{t['id']}] {t['text']}" for t in upcoming[1:]))
+    for t in upcoming[1:]:
+        print(fmt_line(t))
     if state["quick"]:
-        print(f"   Quick queue: {len(state['quick'])} waiting")
+        print(dim(f"  {len(state['quick'])} quick waiting"))
+    print()
 
 
 def cmd_done(state, args):
@@ -430,7 +444,7 @@ def cmd_done(state, args):
         item["done_at"] = now_iso()
         state["archive"].append(item)
         log_event(state, f"done: [{item['id']}] {item['text']}")
-        print(f"✅ Done [{item['id']}]: {item['text']}")
+        print(f"\n  {good('✓ done')}  {dim(str(item['id']))}  {item['text']}")
         state["active"] = None
 
     if target_id is None:
@@ -467,12 +481,12 @@ def cmd_block(state, args):
         state["stack"].pop(idx)
         state["stack"].insert(0, item)  # hold blocked interrupt at bottom, don't lose it
         log_event(state, f"blocked (interrupt, held after {el}): [{item['id']}] {item['text']}{tag}")
-        print(f"⏸  Blocked after {el}, held: [{item['id']}] {item['text']}{tag}")
+        print(f"  {dim('⏸ blocked')} {dim('('+el+', held)')}  {item['text']}{dim(tag)}")
     else:
         state["queue"].pop(idx)
         state["queue"].append(item)
         log_event(state, f"blocked, requeued after {el}: [{item['id']}] {item['text']}{tag}")
-        print(f"⏸  Blocked after {el}, requeued at back: [{item['id']}] {item['text']}{tag}")
+        print(f"  {dim('⏸ blocked')} {dim('('+el+', requeued)')}  {item['text']}{dim(tag)}")
     state["active"] = None
     cmd_next(state, args)
 
@@ -655,24 +669,30 @@ def _cap_str(rules, container, state):
 def cmd_status(state, _args):
     rules = load_rules()
     books_data = load_books()
-    print(f"State file: {STATE_PATH}\n")
-    print(f"⚡ Interrupt stack ({_cap_str(rules, 'stack', state)}, top = active):")
-    for i, t in enumerate(reversed(state["stack"])):
-        print(f"   {'▶ ' if i == 0 else '  '}[{t['id']}] {t['text']}{item_tag(t, books_data)}")
-    gate_note = "  — gate open: only gate items are selectable" if has_open_gate(state) else ""
-    print(f"\n➡️  Main queue ({_cap_str(rules, 'queue', state)}, front = active){gate_note}:")
-    for i, t in enumerate(state["queue"]):
-        print(f"   {'▶ ' if i == 0 else '  '}[{t['id']}] {t['text']}{item_tag(t, books_data)}")
-    print(f"\n⏱  Quick queue ({_cap_str(rules, 'quick', state)}, batched only):")
-    for t in state["quick"]:
-        print(f"   [{t['id']}] {t['text']}{item_tag(t, books_data)}")
+    _kind, _idx, active = find_active(state)
+    active_id = active["id"] if active else None
+
+    def section(title, count_str, items, note=""):
+        head = f"  {bold(title)}  {dim(count_str)}"
+        if note:
+            head += f"   {accent(note)}"
+        print(head)
+        if not items:
+            print(dim("     —"))
+        for t in items:
+            print(fmt_line(t, active=(t["id"] == active_id), books_data=books_data))
+        print()
+
+    print()
+    section("interrupt", _cap_str(rules, "stack", state), list(reversed(state["stack"])))
+    gate_note = "gate open — only gate items selectable" if has_open_gate(state) else ""
+    section("queue", _cap_str(rules, "queue", state), state["queue"], gate_note)
+    section("quick", _cap_str(rules, "quick", state), state["quick"])
     if state.get("backlog"):
-        print(f"\n📥 Backlog ({len(state['backlog'])}, parked over capacity):")
-        for t in state["backlog"]:
-            print(f"   [{t['id']}] {t['text']}{item_tag(t, books_data)}")
+        section("backlog", str(len(state["backlog"])), state["backlog"])
     open_session = next((s for s in reversed(state["sessions"]) if "stopped_at" not in s), None)
     if open_session:
-        print(f"\n▶ Session running: '{open_session['label']}' since {open_session['started_at']}")
+        print(dim(f"  session running: {open_session['label']} since {open_session['started_at']}\n"))
 
 
 def cmd_stats(state, _args):
@@ -682,12 +702,13 @@ def cmd_stats(state, _args):
                    (e["event"].startswith("enqueued") or e["event"].startswith("pushed") or e["event"].startswith("added to quick"))]
     blocked_now = sum(1 for t in state["stack"] + state["queue"] if t.get("blocked"))
     suspended_now = sum(1 for t in state["stack"] + state["queue"] if t.get("suspended"))
-    print(f"📊 {today}")
-    print(f"   added:     {len(added_today)}")
-    print(f"   done:      {len(done_today)}")
-    print(f"   blocked:   {blocked_now}")
-    print(f"   suspended: {suspended_now}")
-    print(f"   open now:  {len(state['queue']) + len(state['stack'])} (queue+stack), {len(state['quick'])} quick")
+    open_now = len(state["queue"]) + len(state["stack"])
+    print(f"\n  {bold(today)}")
+    print(f"    {dim('done')}       {good(str(len(done_today)))}")
+    print(f"    {dim('added')}      {len(added_today)}")
+    print(f"    {dim('blocked')}    {blocked_now}")
+    print(f"    {dim('suspended')}  {suspended_now}")
+    print(f"    {dim('open')}       {open_now} {dim('queue+stack')} · {len(state['quick'])} {dim('quick')}\n")
 
 
 def cmd_session(state, _args):
@@ -805,13 +826,15 @@ def cmd_book_progress(_state, args):
         return
     book["status"] = "active"
     book["page"] = min(book["page"] + args.pages, book["pages"])
-    if book["page"] >= book["pages"]:
+    title, pages, page = book["title"], book["pages"], book["page"]
+    if page >= pages:
         book["status"] = "done"
         save_books(data)
-        print(f"📗 Finished [{book['id']}]: {book['title']}! ({book['pages']}p)")
+        print(f"  {good('✓ finished')}  {title}  {dim(f'({pages}p)')}")
         return
     save_books(data)
-    print(f"📖 [{book['id']}] {book['title']}: {book['page']}/{book['pages']}p ({book['page']*100//book['pages']}%)")
+    pct = page * 100 // pages
+    print(f"  {good('+')} {title}  {page}/{pages}p  {dim(f'{pct}%')}")
 
 
 def cmd_book_done(_state, args):
@@ -837,12 +860,16 @@ def cmd_book_list(_state, _args):
     active = [b for b in data["books"] if b["status"] != "done"]
     daily = data.get("daily_units", 2)
     todays_picks = {b["id"] for b in pick_books_for_today(data, daily)}
-    print(f"📚 Books ({len(active)} open, daily_units={daily}):")
+    print(f"\n  {bold('books')}  {dim(f'{len(active)} open · {daily}/day')}\n")
     for b in data["books"]:
-        mark = "✅" if b["status"] == "done" else ("▶ " if b["id"] in todays_picks else "  ")
+        done = b["status"] == "done"
+        mark = good("✓") if done else (accent("→") if b["id"] in todays_picks else " ")
         pct = f"{b['page']}/{b['pages']}p" if b["pages"] else "?"
-        grp = f"  [group: {b['group']}]" if b.get("group") else ""
-        print(f"   {mark} [{b['id']}] {b['title']}  [{pct}]  ({b['status']}){grp}")
+        grp = dim(f"  · {b['group']}") if b.get("group") else ""
+        title = dim(b["title"]) if done else b["title"]
+        idcol = dim(f"{b['id']:>2}")
+        print(f"  {mark} {idcol}  {title}  {dim(pct)}{grp}")
+    print()
 
 
 WEEKDAY_KEYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]  # datetime.weekday(): Mon=0
@@ -1122,14 +1149,16 @@ def cmd_onboard(state, args):
     # Hard gate: refuse to start a new day while dominant/gate work is still open.
     if strict and has_open_gate(state):
         open_gates = [it for it in state["queue"] if is_gate_item(it) and not it.get("suspended")]
-        print("⛔ Can't onboard yet — finish (or suspend) today's dominant work first:")
+        headline = warn("Can't onboard yet")
+        subtext = dim("— finish (or suspend) yesterday's gate work first:")
+        print(f"\n  {headline} {subtext}\n")
         for it in open_gates:
-            print(f"   [{it['id']}] {it['text']}")
-        print("   Do these, then run `mm onboard` again.")
+            print(fmt_line(it))
+        print()
         return
 
     if state.get("onboarded_date") == today:
-        print(f"Already onboarded today ({today}). Not re-adding.")
+        print(f"\n  {dim('already onboarded today — nothing to re-add')}\n")
         return
 
     snapshot(state)
@@ -1190,17 +1219,20 @@ def cmd_onboard(state, args):
 
     state["onboarded_date"] = today
 
+    pretty_day = datetime.now().strftime("%a %d %b").lower()
     if not added and not backlogged:
-        print(f"🌅 Onboarded {today} — nothing new to add.")
+        print(f"\n  {bold('onboarded')} {dim('· ' + pretty_day)} {dim('— nothing new')}\n")
     else:
-        print(f"🌅 Onboarded {today} — {len(added)} item(s) queued:")
+        print(f"\n  {bold('onboarded')} {dim('· ' + pretty_day)}\n")
+        books_data = load_books()
         for item in added:
-            print(f"   [{item['id']}] {item['text']}{item_tag(item, load_books())}")
+            print(fmt_line(item, books_data=books_data))
+        print()
     if backlogged:
-        print(f"   📥 {len(backlogged)} over capacity → backlog: " +
-              ", ".join(f"[{it['id']}] {it['text']}" for it in backlogged))
+        print(dim(f"  {len(backlogged)} over capacity → backlog: " +
+                  ", ".join(str(it['id']) for it in backlogged)))
     if skipped:
-        print(f"   (skipped, already queued: {', '.join(skipped)})")
+        print(dim(f"  skipped (already queued): {', '.join(skipped)}"))
 
 
 # ---------- rules / capacity / backlog commands ----------
@@ -1209,22 +1241,18 @@ def cmd_rules_show(state, _args):
     rules = load_rules()
     weekday = today_weekday_key()
     source = RULES_PATH if os.path.exists(RULES_PATH) else f"(none yet — create {RULES_PATH})"
-    print(f"📋 Rules source: {source}")
-    print(f"   strict_gate: {rules['onboard'].get('strict_gate', True)}   order: {', '.join(rules['onboard'].get('order', []))}")
+    print(f"\n  {bold('rules')}  {dim(source)}")
+    print(f"    {dim('strict_gate')} {rules['onboard'].get('strict_gate', True)}   {dim('order')} {', '.join(rules['onboard'].get('order', []))}")
     cap = rules.get("capacity", {})
-    print("   capacity: " + ", ".join(f"{k}={v.get('max')}({v.get('on_full')})" for k, v in cap.items()))
+    print("    " + dim("capacity  ") + ", ".join(f"{k}={v.get('max')}({v.get('on_full')})" for k, v in cap.items()))
     specs = compile_rules(rules, weekday)
-    print(f"\n🌅 Today ({weekday}) would queue {len(specs)} item(s):")
+    print(f"\n  {bold('today')} {dim('· ' + weekday)} — {len(specs)} item(s):\n")
     if not specs:
-        print("   (nothing scheduled for today)")
+        print(dim("     nothing scheduled"))
     for s in specs:
-        flags = []
-        if s.get("dominant"):
-            flags.append("dominant")
-        elif s.get("gate"):
-            flags.append("gate")
-        flags.append(s.get("position", "back"))
-        print(f"   [{s['track']}] {s['text']}  ({', '.join(flags)})")
+        flag = "gate" if (s.get("dominant") or s.get("gate")) else s.get("position", "back")
+        print(f"     {s['text']}  {dim('· ' + s['track'] + ' · ' + flag)}")
+    print()
 
 
 def cmd_rules_validate(state, _args):

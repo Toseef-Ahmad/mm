@@ -171,6 +171,7 @@ Override the base dir for a separate instance: `export MM_HOME=~/.mm-work`
 
 ## Design notes
 
+- **Calm, minimal output.** Color is used only when writing to a real terminal, and is disabled by `NO_COLOR=1` or `TERM=dumb`, so piping/redirecting stays plain text.
 - **Zero dependencies, plain JSON, atomic writes** (`temp + os.replace` + `fsync`) — a crash mid-write can't corrupt state. Empty/corrupt files start fresh instead of failing.
 - **Advisory file lock** so two terminals can't race.
 - **One source of truth.** All scheduling lives in `mm.rules.json`; there is no second, drifting copy of your weekly tables.
