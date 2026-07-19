@@ -39,7 +39,6 @@ Usage:
   mm start [label]               begin a tracked work stretch
   mm stop                       end the current work stretch, log duration/interruptions/completions
   mm log [n]                    show last n log events (default 10)
-  mm migrate                    write the unified mm.rules.json from your legacy config files
   mm rules show                 print today's compiled onboard plan without changing anything
   mm rules validate             check the unified schema for errors
   mm backlog [--promote]        view items parked over capacity; --promote pulls them back in
@@ -66,11 +65,7 @@ STATE_PATH = os.environ.get("MM_STATE", os.path.join(STATE_DIR, "state.json"))
 LOCK_PATH = STATE_PATH + ".lock"
 BOOKS_PATH = os.environ.get("MM_BOOKS", os.path.join(STATE_DIR, "books.json"))
 BOOKS_CONFIG_PATH = os.environ.get("MM_BOOKS_CONFIG", os.path.join(STATE_DIR, "books_config.json"))
-TOPICS_CONFIG_PATH = os.environ.get("MM_TOPICS_CONFIG", os.path.join(STATE_DIR, "topics_config.json"))
-CONCEPTS_CONFIG_PATH = os.environ.get("MM_CONCEPTS_CONFIG", os.path.join(STATE_DIR, "concepts_config.json"))
-ONBOARD_CONFIG_PATH = os.environ.get("MM_ONBOARD_CONFIG", os.path.join(STATE_DIR, "onboard_config.json"))
 RULES_PATH = os.environ.get("MM_RULES", os.path.join(STATE_DIR, "mm.rules.json"))
-DEFAULT_ONBOARD_ORDER = ["books", "concept", "topic"]
 
 EMPTY_BOOKS = {"books": [], "daily_units": 2, "next_id": 1}
 
@@ -127,6 +122,9 @@ class Lock:
 def load():
     ensure_dir()
     if not os.path.exists(STATE_PATH):
+        return copy.deepcopy(EMPTY_STATE)
+    # An empty file isn't corruption worth preserving — just start fresh, quietly.
+    if os.path.getsize(STATE_PATH) == 0:
         return copy.deepcopy(EMPTY_STATE)
     try:
         with open(STATE_PATH) as f:
@@ -237,7 +235,7 @@ def snapshot(state):
     state["_snapshots"] = state["_snapshots"][-15:]
 
 
-def new_item(state, text, gate=False, dominant=False, track=None, rule_id=None, ref=None):
+def new_item(state, text, gate=False, dominant=False, track=None, rule_id=None, ref=None, group=None):
     item = {"id": state["next_id"], "text": text, "added_at": now_iso()}
     if dominant:
         gate = True  # dominant work is, by definition, a gate
@@ -251,23 +249,16 @@ def new_item(state, text, gate=False, dominant=False, track=None, rule_id=None, 
         item["rule_id"] = rule_id
     if ref is not None:
         item["ref"] = ref
+    if group:
+        item["group"] = group
     state["next_id"] += 1
     return item
 
 
-# Legacy prefixes — only used to backfill gate metadata onto items created by
-# older versions of mm that had no `gate` field. New items are classified purely
-# by their explicit `gate` field, never by their text.
-GATE_PREFIXES = ("📖 [", "🧭 Topic: ", "🧠 Abstract thinking: ")
-
-
 def is_gate_item(item):
-    """A gate item blocks everything behind it until it's done. Prefer the
-    explicit metadata; fall back to the legacy text prefix only for items that
-    predate the metadata (backfill hasn't run or was undone)."""
-    if "gate" in item:
-        return bool(item["gate"])
-    return item["text"].startswith(GATE_PREFIXES)
+    """A gate item blocks everything behind it until it's done. Items are
+    classified purely by their explicit `gate` field, set at creation time."""
+    return bool(item.get("gate"))
 
 
 def has_open_gate(state):
@@ -275,25 +266,6 @@ def has_open_gate(state):
     consciously set aside. A suspended gate item stops gating (you chose to park
     it); a still-active or blocked one keeps the day gated."""
     return any(is_gate_item(it) and not it.get("suspended") for it in state["queue"])
-
-
-def backfill_gate_metadata(state):
-    """One-time upgrade: tag items created before the metadata era so the gate
-    keeps working across the upgrade without the user losing their place."""
-    changed = False
-    for container in ("queue", "stack", "quick", "backlog"):
-        for it in state.get(container, []):
-            if "gate" not in it and it["text"].startswith(GATE_PREFIXES):
-                it["gate"] = True
-                it["dominant"] = True
-                if it["text"].startswith("📖 ["):
-                    it["track"] = "books"
-                elif it["text"].startswith("🧠"):
-                    it["track"] = "concept"
-                elif it["text"].startswith("🧭"):
-                    it["track"] = "topic"
-                changed = True
-    return changed
 
 
 def find_item(state, item_id, containers=("stack", "queue", "quick")):
@@ -343,13 +315,24 @@ def elapsed_str(started_at):
     return f"{mins}m{secs:02d}s"
 
 
-def item_tag(t):
+def item_tag(item, books_data=None):
     tags = []
-    if t.get("blocked"):
-        tags.append(f"blocked: {t['blocked_reason']}" if t.get("blocked_reason") else "blocked")
-    if t.get("suspended"):
+    if item.get("track"):
+        tags.append(item["track"])
+    grp = item.get("group")
+    if not grp and item.get("ref") is not None:
+        if books_data is None:
+            books_data = load_books()
+        book = find_book(books_data, item["ref"])
+        if book:
+            grp = book.get("group")
+    if grp:
+        tags.append(f"group:{grp}")
+    if item.get("blocked"):
+        tags.append(f"blocked: {item['blocked_reason']}" if item.get("blocked_reason") else "blocked")
+    if item.get("suspended"):
         tags.append("suspended")
-    if is_gate_item(t):
+    if is_gate_item(item):
         tags.append("gate")
     return ("  [" + ", ".join(tags) + "]") if tags else ""
 
@@ -409,7 +392,7 @@ def cmd_next(state, _args):
         mark_active(state, item)
         el = elapsed_str(state["active"]["started_at"])
         label = "INTERRUPT" if kind == "stack" else "NEXT"
-        print(f"{'⚡' if kind == 'stack' else '➡️ '} {label} [{item['id']}] ({el} active): {item['text']}")
+        print(f"{'⚡' if kind == 'stack' else '➡️ '} {label} [{item['id']}] ({el} active): {item['text']}{item_tag(item, load_books())}")
     else:
         state["active"] = None
         stuck_n = sum(1 for it in state["stack"] + state["queue"] if it.get("blocked") or it.get("suspended"))
@@ -428,7 +411,7 @@ def cmd_peek(state, _args):
         started = state["active"]["started_at"] if (state["active"] and state["active"]["id"] == item["id"]) else None
         el = elapsed_str(started) if started else "not started"
         label = "INTERRUPT" if kind == "stack" else "NEXT"
-        print(f"{'⚡' if kind == 'stack' else '➡️ '} {label} [{item['id']}] ({el}): {item['text']}")
+        print(f"{'⚡' if kind == 'stack' else '➡️ '} {label} [{item['id']}] ({el}): {item['text']}{item_tag(item, load_books())}")
     else:
         print("Nothing active.")
     upcoming = [it for it in state["queue"] if not it.get("blocked") and not it.get("suspended")][:3]
@@ -671,21 +654,22 @@ def _cap_str(rules, container, state):
 
 def cmd_status(state, _args):
     rules = load_rules()
+    books_data = load_books()
     print(f"State file: {STATE_PATH}\n")
     print(f"⚡ Interrupt stack ({_cap_str(rules, 'stack', state)}, top = active):")
     for i, t in enumerate(reversed(state["stack"])):
-        print(f"   {'▶ ' if i == 0 else '  '}[{t['id']}] {t['text']}{item_tag(t)}")
+        print(f"   {'▶ ' if i == 0 else '  '}[{t['id']}] {t['text']}{item_tag(t, books_data)}")
     gate_note = "  — gate open: only gate items are selectable" if has_open_gate(state) else ""
     print(f"\n➡️  Main queue ({_cap_str(rules, 'queue', state)}, front = active){gate_note}:")
     for i, t in enumerate(state["queue"]):
-        print(f"   {'▶ ' if i == 0 else '  '}[{t['id']}] {t['text']}{item_tag(t)}")
+        print(f"   {'▶ ' if i == 0 else '  '}[{t['id']}] {t['text']}{item_tag(t, books_data)}")
     print(f"\n⏱  Quick queue ({_cap_str(rules, 'quick', state)}, batched only):")
     for t in state["quick"]:
-        print(f"   [{t['id']}] {t['text']}")
+        print(f"   [{t['id']}] {t['text']}{item_tag(t, books_data)}")
     if state.get("backlog"):
         print(f"\n📥 Backlog ({len(state['backlog'])}, parked over capacity):")
         for t in state["backlog"]:
-            print(f"   [{t['id']}] {t['text']}{item_tag(t)}")
+            print(f"   [{t['id']}] {t['text']}{item_tag(t, books_data)}")
     open_session = next((s for s in reversed(state["sessions"]) if "stopped_at" not in s), None)
     if open_session:
         print(f"\n▶ Session running: '{open_session['label']}' since {open_session['started_at']}")
@@ -867,8 +851,8 @@ WEEKDAY_KEYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]  # datetime.wee
 def today_weekday_key():
     """Locale-independent weekday key. strftime('%a') depends on the system's
     LC_TIME setting and silently returns non-English abbreviations under a
-    different locale (e.g. 'So' instead of 'Sun') — which would make topic/
-    concept lookups vanish with no error at all. This never depends on locale."""
+    different locale (e.g. 'So' instead of 'Sun') — which would make weekday
+    track lookups vanish with no error at all. This never depends on locale."""
     return WEEKDAY_KEYS[datetime.now().weekday()]
 
 
@@ -945,107 +929,6 @@ def cmd_book_sync(_state, _args):
         print("      remove by hand with `mm book rm <id>` if that's intentional.")
 
 
-def load_topics_config():
-    if not os.path.exists(TOPICS_CONFIG_PATH):
-        return None
-    try:
-        with open(TOPICS_CONFIG_PATH) as f:
-            return json.load(f)
-    except (json.JSONDecodeError, OSError) as e:
-        print(f"⚠️  {TOPICS_CONFIG_PATH} is malformed ({e}). Skipping today's topic.", file=sys.stderr)
-        return None
-
-
-def todays_topic():
-    """Weekday-keyed lookup (Mon..Sun). Pure read of the config — no state,
-    no progress tracking. Completion is handled by mm done like any other
-    queue item; there's nothing else here that needs remembering."""
-    config = load_topics_config()
-    if not config:
-        return None
-    weekday = today_weekday_key()
-    return config.get(weekday)
-
-
-def cmd_topic_today(_state, _args):
-    topic = todays_topic()
-    if topic is None:
-        print(f"No topic configured for today. Edit {TOPICS_CONFIG_PATH}")
-        return
-    print(f"🧭 Today ({today_weekday_key()}): {topic}")
-
-
-def cmd_topic_list(_state, _args):
-    config = load_topics_config()
-    if not config:
-        print(f"No topics config found at {TOPICS_CONFIG_PATH}.")
-        print('Create it as: {"Mon": "...", "Tue": "...", ..., "Sun": "..."}')
-        return
-    order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    today = today_weekday_key()
-    print("🧭 Weekly topic table:")
-    for day in order:
-        if day in config:
-            mark = "▶ " if day == today else "  "
-            print(f"   {mark}{day}: {config[day]}")
-
-
-def load_concepts_config():
-    if not os.path.exists(CONCEPTS_CONFIG_PATH):
-        return None
-    try:
-        with open(CONCEPTS_CONFIG_PATH) as f:
-            return json.load(f)
-    except (json.JSONDecodeError, OSError) as e:
-        print(f"⚠️  {CONCEPTS_CONFIG_PATH} is malformed ({e}). Skipping today's concept.", file=sys.stderr)
-        return None
-
-
-def todays_concept():
-    config = load_concepts_config()
-    if not config:
-        return None
-    weekday = today_weekday_key()
-    return config.get(weekday)
-
-
-def cmd_concept_today(_state, _args):
-    concept = todays_concept()
-    if concept is None:
-        print(f"No concept scheduled for today. Edit {CONCEPTS_CONFIG_PATH}")
-        return
-    print(f"🧠 Today ({today_weekday_key()}): {concept}")
-
-
-def cmd_concept_list(_state, _args):
-    config = load_concepts_config()
-    if not config:
-        print(f"No concepts config found at {CONCEPTS_CONFIG_PATH}.")
-        print('Create it as: {"Mon": "DSA", "Tue": "Screeps", ..., "Sun": "..."}')
-        return
-    order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    today = today_weekday_key()
-    print("🧠 Weekly concept rotation:")
-    for day in order:
-        if day in config:
-            mark = "▶ " if day == today else "  "
-            print(f"   {mark}{day}: {config[day]}")
-
-
-def cmd_concept_queue(state, _args):
-    """Manual fallback — onboard now includes today's concept automatically,
-    but this stays available in case you need to re-add it (e.g. after an
-    undo, or a day you skipped onboard entirely)."""
-    concept = todays_concept()
-    if concept is None:
-        print(f"No concept scheduled for today. Edit {CONCEPTS_CONFIG_PATH}")
-        return
-    item = new_item(state, f"🧠 Abstract thinking: {concept}")
-    state["queue"].append(item)
-    log_event(state, f"queued concept: [{item['id']}] {item['text']}")
-    print(f"🧠 Queued [{item['id']}]: {item['text']}")
-
-
 def cmd_book_rm(_state, args):
     data = load_books()
     book = find_book(data, args.id)
@@ -1055,30 +938,6 @@ def cmd_book_rm(_state, args):
     data["books"] = [b for b in data["books"] if b["id"] != args.id]
     save_books(data)
     print(f"🗑  Removed [{book['id']}]: {book['title']}")
-
-
-def load_onboard_config():
-    """The pattern/order of automated onboarding slots. Editable by hand —
-    reordering, or adding a future slot name, never requires touching code.
-    Falls back to the current, tested default if the file is missing or a
-    slot name is unrecognized."""
-    order = list(DEFAULT_ONBOARD_ORDER)
-    if os.path.exists(ONBOARD_CONFIG_PATH):
-        try:
-            with open(ONBOARD_CONFIG_PATH) as f:
-                data = json.load(f)
-            candidate = data.get("order")
-            if isinstance(candidate, list) and candidate:
-                known = set(DEFAULT_ONBOARD_ORDER)
-                unknown = [s for s in candidate if s not in known]
-                if unknown:
-                    print(f"⚠️  Ignoring unknown onboard slot(s) in config: {unknown}", file=sys.stderr)
-                order = [s for s in candidate if s in known]
-                if not order:
-                    order = list(DEFAULT_ONBOARD_ORDER)
-        except (json.JSONDecodeError, OSError) as e:
-            print(f"⚠️  Couldn't read {ONBOARD_CONFIG_PATH} ({e}), using default order.", file=sys.stderr)
-    return order
 
 
 def leading_gate_count(queue):
@@ -1115,57 +974,17 @@ def _merge_rules_defaults(rules):
     return rules
 
 
-def derive_rules_from_legacy():
-    """Build a unified rules object in-memory from the old scattered config
-    files, so onboarding keeps working before the user ever runs `mm migrate`.
-    Books/concept/topic are just the seeded default tracks — nothing here is
-    special-cased in the engine itself."""
-    tracks = {}
-    books_data = load_books()
-    if books_data.get("books"):
-        tracks["books"] = {
-            "type": "rotation",
-            "count": books_data.get("daily_units", 2),
-            "unit": "group",
-            "dominant": True,
-            "position": "gate",
-            "label": "📖 [{id}] {title} ({page}/{pages}p)",
-        }
-    concepts = load_concepts_config()
-    if concepts:
-        tracks["concept"] = {
-            "type": "weekday", "dominant": True, "position": "gate",
-            "label": "🧠 {value}", "table": concepts,
-        }
-    topics = load_topics_config()
-    if topics:
-        tracks["topic"] = {
-            "type": "weekday", "dominant": True, "position": "gate",
-            "label": "🧭 {value}", "table": topics,
-        }
-    order = [t for t in load_onboard_config() if t in tracks]
-    for t in tracks:
-        if t not in order:
-            order.append(t)
-    return _merge_rules_defaults({
-        "version": 1,
-        "onboard": {"strict_gate": True, "order": order},
-        "capacity": default_capacity(),
-        "tracks": tracks,
-    })
-
-
 def load_rules():
-    """The single source of truth for onboarding. Prefers the unified
-    mm.rules.json; falls back to deriving from legacy configs so nothing breaks
-    for a user who hasn't migrated yet."""
+    """The single source of truth for onboarding: mm.rules.json. If it's missing
+    or malformed, onboarding simply queues nothing (rather than crashing) — the
+    rest of mm keeps working as a plain queue/stack/quick scheduler."""
     if os.path.exists(RULES_PATH):
         try:
             with open(RULES_PATH) as f:
                 return _merge_rules_defaults(json.load(f))
         except (json.JSONDecodeError, OSError) as e:
-            print(f"⚠️  {RULES_PATH} is malformed ({e}); falling back to legacy configs.", file=sys.stderr)
-    return derive_rules_from_legacy()
+            print(f"⚠️  {RULES_PATH} is malformed ({e}); onboarding is disabled until you fix it.", file=sys.stderr)
+    return _merge_rules_defaults({})
 
 
 def save_rules(rules):
@@ -1213,9 +1032,9 @@ def compile_track(name, track, weekday, count_override=None):
     label = track.get("label", "{value}")
     daily_cap = track.get("daily_cap")
 
-    def spec(text, ref=None):
+    def spec(text, ref=None, group=None):
         return {"text": text, "gate": gate, "dominant": dominant,
-                "track": name, "position": position, "ref": ref}
+                "track": name, "position": position, "ref": ref, "group": group}
 
     specs = []
     if ttype == "rotation":
@@ -1224,7 +1043,7 @@ def compile_track(name, track, weekday, count_override=None):
         for b in pick_books_for_today(data, count):
             text = _fmt_label(label, id=b["id"], title=b["title"],
                               page=b["page"], pages=b["pages"], value=b["title"])
-            specs.append(spec(text, ref=b["id"]))
+            specs.append(spec(text, ref=b["id"], group=b.get("group")))
     elif ttype == "weekday":
         for v in _as_list(track.get("table", {}).get(weekday)):
             if v:
@@ -1336,7 +1155,7 @@ def cmd_onboard(state, args):
     def make(s):
         return new_item(state, s["text"], gate=s.get("gate", False),
                         dominant=s.get("dominant", False), track=s.get("track"),
-                        rule_id=s.get("track"), ref=s.get("ref"))
+                        rule_id=s.get("track"), ref=s.get("ref"), group=s.get("group"))
 
     # Gate items bypass the capacity cap (the non-negotiable core of the day)
     # and land right after any still-undone gate items from before, never ahead.
@@ -1376,7 +1195,7 @@ def cmd_onboard(state, args):
     else:
         print(f"🌅 Onboarded {today} — {len(added)} item(s) queued:")
         for item in added:
-            print(f"   [{item['id']}] {item['text']}{item_tag(item)}")
+            print(f"   [{item['id']}] {item['text']}{item_tag(item, load_books())}")
     if backlogged:
         print(f"   📥 {len(backlogged)} over capacity → backlog: " +
               ", ".join(f"[{it['id']}] {it['text']}" for it in backlogged))
@@ -1386,25 +1205,10 @@ def cmd_onboard(state, args):
 
 # ---------- rules / capacity / backlog commands ----------
 
-def cmd_migrate(state, _args):
-    if os.path.exists(RULES_PATH):
-        print(f"{RULES_PATH} already exists — not overwriting.")
-        print("Edit it directly, or delete it and re-run `mm migrate` to regenerate from legacy configs.")
-        return
-    rules = derive_rules_from_legacy()
-    save_rules(rules)
-    tracks = rules.get("tracks", {})
-    print(f"✅ Wrote unified schema → {RULES_PATH}")
-    print(f"   tracks:   {', '.join(tracks.keys()) or '(none)'}")
-    print(f"   order:    {', '.join(rules['onboard']['order']) or '(none)'}")
-    print(f"   strict_gate: {rules['onboard']['strict_gate']}")
-    print("   Legacy config files were left untouched.")
-
-
 def cmd_rules_show(state, _args):
     rules = load_rules()
     weekday = today_weekday_key()
-    source = RULES_PATH if os.path.exists(RULES_PATH) else "(derived from legacy configs — run `mm migrate` to persist)"
+    source = RULES_PATH if os.path.exists(RULES_PATH) else f"(none yet — create {RULES_PATH})"
     print(f"📋 Rules source: {source}")
     print(f"   strict_gate: {rules['onboard'].get('strict_gate', True)}   order: {', '.join(rules['onboard'].get('order', []))}")
     cap = rules.get("capacity", {})
@@ -1477,8 +1281,9 @@ def cmd_backlog(state, args):
         print("📥 Backlog empty.")
         return
     print(f"📥 Backlog ({len(state['backlog'])} parked over capacity):")
+    books_data = load_books()
     for it in state["backlog"]:
-        print(f"   [{it['id']}] {it['text']}{item_tag(it)}")
+        print(f"   [{it['id']}] {it['text']}{item_tag(it, books_data)}")
     print("   Run `mm backlog --promote` to pull items back in as space allows.")
 
 
@@ -1585,7 +1390,7 @@ def main():
     lg.add_argument("n", nargs="?", type=int, default=None)
     lg.set_defaults(func=cmd_log)
 
-    ob = sub.add_parser("onboard", help="seed today's queue from the book rotation (idempotent per day)")
+    ob = sub.add_parser("onboard", help="seed today's queue from mm.rules.json (idempotent per day)")
     ob.add_argument("-n", "--count", type=int, default=None, help="override daily_units just for today")
     ob.set_defaults(func=cmd_onboard)
 
@@ -1617,29 +1422,6 @@ def main():
     bkr.add_argument("id", type=int)
     bkr.set_defaults(func=cmd_book_rm)
 
-    tp = sub.add_parser("topic")
-    tp_sub = tp.add_subparsers(dest="topic_cmd", required=True)
-
-    tpt = tp_sub.add_parser("today")
-    tpt.set_defaults(func=cmd_topic_today)
-
-    tpl = tp_sub.add_parser("list")
-    tpl.set_defaults(func=cmd_topic_list)
-
-    cn = sub.add_parser("concept", help="abstract-thinking / DSA / screeps rotation — opt-in, not auto-gated")
-    cn_sub = cn.add_subparsers(dest="concept_cmd", required=True)
-
-    cnt = cn_sub.add_parser("today")
-    cnt.set_defaults(func=cmd_concept_today)
-
-    cnl = cn_sub.add_parser("list")
-    cnl.set_defaults(func=cmd_concept_list)
-
-    cnq = cn_sub.add_parser("queue", help="manually add today's concept to the queue, when YOU decide")
-    cnq.set_defaults(func=cmd_concept_queue)
-
-    sub.add_parser("migrate", help="write the unified mm.rules.json from your legacy config files").set_defaults(func=cmd_migrate)
-
     ru = sub.add_parser("rules", help="inspect the unified rules engine")
     ru_sub = ru.add_subparsers(dest="rules_cmd", required=True)
     ru_sub.add_parser("show", help="print today's compiled plan without changing anything").set_defaults(func=cmd_rules_show)
@@ -1657,8 +1439,6 @@ def main():
     args = p.parse_args()
     with Lock():
         state = load()
-        if backfill_gate_metadata(state):
-            log_event(state, "backfilled gate metadata onto legacy items")
         args.func(state, args)
         save(state)
 

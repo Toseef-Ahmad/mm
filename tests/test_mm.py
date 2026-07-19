@@ -25,9 +25,6 @@ class MMTestCase(unittest.TestCase):
         mm.LOCK_PATH = mm.STATE_PATH + ".lock"
         mm.BOOKS_PATH = os.path.join(self.tmp, "books.json")
         mm.BOOKS_CONFIG_PATH = os.path.join(self.tmp, "books_config.json")
-        mm.TOPICS_CONFIG_PATH = os.path.join(self.tmp, "topics_config.json")
-        mm.CONCEPTS_CONFIG_PATH = os.path.join(self.tmp, "concepts_config.json")
-        mm.ONBOARD_CONFIG_PATH = os.path.join(self.tmp, "onboard_config.json")
         mm.RULES_PATH = os.path.join(self.tmp, "mm.rules.json")
         self._orig_weekday = mm.today_weekday_key
         mm.today_weekday_key = lambda: "Mon"  # deterministic weekday
@@ -61,6 +58,33 @@ class MMTestCase(unittest.TestCase):
 
     def texts(self, container):
         return [it["text"] for it in self.state()[container]]
+
+
+class TestItemTag(MMTestCase):
+    def test_shows_track_group_and_gate(self):
+        books = {
+            "books": [{"id": 2, "title": "CS201", "pages": 500, "page": 0,
+                       "status": "queued", "group": "cs-core"}],
+            "next_id": 3, "daily_units": 2,
+        }
+        with open(mm.BOOKS_PATH, "w", encoding="utf-8") as f:
+            json.dump(books, f)
+        item = {"id": 1, "text": "📖 [2] CS201 (0/500p)", "track": "books",
+                "gate": True, "ref": 2, "group": "cs-core"}
+        tag = mm.item_tag(item, books)
+        self.assertIn("books", tag)
+        self.assertIn("group:cs-core", tag)
+        self.assertIn("gate", tag)
+
+    def test_group_lookup_from_ref_when_missing_on_item(self):
+        books = {
+            "books": [{"id": 2, "title": "CS201", "pages": 500, "page": 0,
+                       "status": "queued", "group": "cs-core"}],
+            "next_id": 3, "daily_units": 2,
+        }
+        item = {"id": 1, "text": "📖 [2] CS201", "track": "books", "gate": True, "ref": 2}
+        tag = mm.item_tag(item, books)
+        self.assertIn("group:cs-core", tag)
 
 
 class TestUniversalTracks(MMTestCase):
@@ -214,43 +238,20 @@ class TestGate(MMTestCase):
         self.assertTrue(mm.has_open_gate(self.state()))
 
 
-class TestMigrateAndBackfill(MMTestCase):
-    def test_migrate_from_legacy_configs(self):
-        self.cli("book", "add", "CS101", "100")
-        with open(mm.CONCEPTS_CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump({"Mon": "DSA"}, f)
-        with open(mm.TOPICS_CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump({"Mon": "Physics"}, f)
-        with open(mm.ONBOARD_CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump({"order": ["books", "concept", "topic"]}, f)
-        self.cli("migrate")
-        self.assertTrue(os.path.exists(mm.RULES_PATH))
-        with open(mm.RULES_PATH, encoding="utf-8") as f:
-            rules = json.load(f)
-        self.assertEqual(set(rules["tracks"].keys()), {"books", "concept", "topic"})
-        self.assertEqual(rules["tracks"]["books"]["type"], "rotation")
-        self.assertEqual(rules["tracks"]["concept"]["type"], "weekday")
-        self.assertEqual(rules["onboard"]["order"], ["books", "concept", "topic"])
-        # capacity defaults filled in
-        self.assertEqual(rules["capacity"]["queue"]["max"], 10)
+class TestRobustness(MMTestCase):
+    def test_empty_state_file_starts_fresh_quietly(self):
+        # A 0-byte state.json must not spam a .corrupt- backup — just start fresh.
+        open(mm.STATE_PATH, "w").close()
+        self.cli("status")
+        self.assertEqual(self.state()["queue"], [])
+        leftovers = [f for f in os.listdir(self.tmp) if ".corrupt-" in f]
+        self.assertEqual(leftovers, [])
 
-    def test_migrate_is_nondestructive(self):
-        with open(mm.CONCEPTS_CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump({"Mon": "DSA"}, f)
-        self.cli("migrate")
-        self.assertTrue(os.path.exists(mm.CONCEPTS_CONFIG_PATH))  # legacy left in place
-
-    def test_legacy_prefix_backfill(self):
-        base = dict(mm.EMPTY_STATE)
-        base = json.loads(json.dumps(mm.EMPTY_STATE))  # deep copy
-        base["queue"] = [{"id": 1, "text": "📖 [1] CS302 (0/500p)", "added_at": mm.now_iso()}]
-        base["next_id"] = 2
-        self.write_state(base)
-        self.cli("status")  # any command triggers backfill in main()
-        it = self.state()["queue"][0]
-        self.assertTrue(it.get("gate"))
-        self.assertTrue(it.get("dominant"))
-        self.assertEqual(it.get("track"), "books")
+    def test_missing_rules_disables_onboard_without_crashing(self):
+        # No rules file at all → onboard queues nothing, no traceback.
+        out = self.cli("onboard")
+        self.assertIn("Onboarded", out)
+        self.assertEqual(self.state()["queue"], [])
 
 
 class TestRulesCommands(MMTestCase):
