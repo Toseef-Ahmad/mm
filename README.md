@@ -39,6 +39,19 @@ mm stats       # end of day: the honest numbers
 
 That's the whole ritual. **`mm onboard` in the morning, then `mm next` / `mm done` all day.**
 
+### Rewards — paid only on closed loops
+
+Configure a `rewards` section in `~/.mm/mm.rules.json`:
+
+```json
+"rewards": {
+  "daily": "30 min guilt-free fun — EARNED, not stolen mid-task",
+  "streak_milestones": { "3": "…", "7": "…", "30": "…" }
+}
+```
+
+While gates remain open, `mm done` shows `gates N closed · M to go — reward unlocks at zero`. When the **last** gate of the day closes, the daily reward unlocks and the all-gates-closed **streak** advances (shown in `mm stats`). The reward never fires on partial progress — by design: partial-win dopamine ("good enough, time for YouTube") is the exact failure mode this tool exists to fight. Suspended gates don't block the day (parking is honest), but they don't count as closed either.
+
 **Precedence** (what `mm next` hands you): interrupt stack (`mm add -p`) → gate items (today's dominant learning) → rest of the queue.
 
 - **Stuck waiting on something (e.g. an agent run)?** `mm block "reason"` — parks it and advances immediately, so idle time auto-fills with your next task.

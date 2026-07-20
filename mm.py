@@ -52,7 +52,7 @@ import os
 import sys
 import argparse
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date, timedelta
 
 try:
     import fcntl
@@ -72,6 +72,7 @@ EMPTY_BOOKS = {"books": [], "daily_units": 2, "next_id": 1}
 EMPTY_STATE = {
     "queue": [], "stack": [], "quick": [], "backlog": [], "log": [], "next_id": 1, "active": None,
     "archive": [], "sessions": [], "_snapshots": [], "onboarded_date": None,
+    "gate_days": [],  # dates on which ALL gate work was closed — feeds the reward streak
 }
 
 
@@ -285,6 +286,59 @@ def has_open_gate(state):
     return any(is_gate_item(it) and not it.get("suspended") for it in state["queue"])
 
 
+# ---------- reward on closed loops ----------
+# The reward fires ONLY when every gate is genuinely closed — never on partial
+# progress. This is deliberate: partial-win dopamine ("good enough, time for
+# YouTube") is the failure mode this tool exists to fight. The reward moves the
+# payout to the far side of the finish line.
+
+def gate_progress_today(state):
+    """(closed_today, still_open). Suspended gates don't count as open — parking
+    is an honest choice, but they don't count as closed either, so a day with
+    suspensions still shows what was truly finished."""
+    today = today_str()
+    closed = sum(1 for t in state["archive"]
+                 if is_gate_item(t) and t.get("done_at", "").startswith(today))
+    open_ = sum(1 for it in state["queue"]
+                if is_gate_item(it) and not it.get("suspended"))
+    return closed, open_
+
+
+def streak_length(days, upto):
+    """Consecutive run of dates in `days` ending at `upto` (a date isoformat)."""
+    dayset = set(days)
+    d = date.fromisoformat(upto)
+    n = 0
+    while d.isoformat() in dayset:
+        n += 1
+        d -= timedelta(days=1)
+    return n
+
+
+def reward_check(state):
+    """Called after a gate item closes. Prints progress while gates remain;
+    prints the earned reward + streak when the last gate of the day closes."""
+    closed, open_ = gate_progress_today(state)
+    if closed == 0:
+        return
+    if open_:
+        print(f"  {dim('gates')} {good(str(closed))} {dim('closed ·')} {warn(str(open_))} {dim('to go — reward unlocks at zero')}")
+        return
+    days = set(state.get("gate_days", []))
+    days.add(today_str())
+    state["gate_days"] = sorted(days)[-400:]
+    streak = streak_length(state["gate_days"], today_str())
+    log_event(state, f"ALL GATES CLOSED — streak {streak} day(s)")
+    rewards = load_rules().get("rewards", {})
+    print(f"\n  {good('★ ALL GATES CLOSED')} — {bold('day earned.')}")
+    if rewards.get("daily"):
+        print(f"  {bold('reward unlocked:')} {rewards['daily']}")
+    print(f"  {dim('streak:')} {bold(str(streak))} {dim('day(s) of fully closed loops')}")
+    milestone = rewards.get("streak_milestones", {}).get(str(streak))
+    if milestone:
+        print(f"  {warn('milestone —')} {milestone}")
+
+
 def find_item(state, item_id, containers=("stack", "queue", "quick")):
     for container in containers:
         items = state[container]
@@ -446,6 +500,8 @@ def cmd_done(state, args):
         log_event(state, f"done: [{item['id']}] {item['text']}")
         print(f"\n  {good('✓ done')}  {dim(str(item['id']))}  {item['text']}")
         state["active"] = None
+        if is_gate_item(item):
+            reward_check(state)
 
     if target_id is None:
         container, idx, item = find_active(state)
@@ -703,12 +759,16 @@ def cmd_stats(state, _args):
     blocked_now = sum(1 for t in state["stack"] + state["queue"] if t.get("blocked"))
     suspended_now = sum(1 for t in state["stack"] + state["queue"] if t.get("suspended"))
     open_now = len(state["queue"]) + len(state["stack"])
+    gates_closed, gates_open = gate_progress_today(state)
+    streak = streak_length(state.get("gate_days", []), today)
     print(f"\n  {bold(today)}")
     print(f"    {dim('done')}       {good(str(len(done_today)))}")
     print(f"    {dim('added')}      {len(added_today)}")
     print(f"    {dim('blocked')}    {blocked_now}")
     print(f"    {dim('suspended')}  {suspended_now}")
-    print(f"    {dim('open')}       {open_now} {dim('queue+stack')} · {len(state['quick'])} {dim('quick')}\n")
+    print(f"    {dim('open')}       {open_now} {dim('queue+stack')} · {len(state['quick'])} {dim('quick')}")
+    print(f"    {dim('gates')}      {good(str(gates_closed))} {dim('closed ·')} {gates_open} {dim('open')}")
+    print(f"    {dim('streak')}     {bold(str(streak))} {dim('day(s) all-gates-closed')}\n")
 
 
 def cmd_session(state, _args):
