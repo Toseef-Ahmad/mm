@@ -37,7 +37,7 @@ mm done        # finished it — advance to the next thing
 mm stats       # end of day: the honest numbers
 ```
 
-That's the whole ritual. **`mm onboard` in the morning, then `mm next` / `mm done` all day.**
+That's the whole ritual. **`mm onboard` in the morning, then `mm` / `mm done` all day.** (Bare `mm` = `mm next`.)
 
 ### Rewards — paid only on closed loops
 
@@ -125,6 +125,10 @@ mm book done 2                   # mark finished directly, no page count
 mm book list                     # ▶ marks which books are in today's window
 mm book rm 3
 ```
+
+A book gate closes by reading, not by ticking: `mm done` on a book gate is refused
+unless pages were logged (`mm book progress`) that same day. Park it honestly with
+`mm suspend` instead if today isn't the day.
 
 **Bulk-declare** your reading list in `~/.mm/books_config.json`, then reconcile:
 

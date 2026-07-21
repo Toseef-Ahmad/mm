@@ -17,6 +17,7 @@ Usage:
   mm add "task"                add to main queue
   mm add -p "task"              push to interrupt stack (preempts everything)
   mm add -q "task"              add to quick queue (batched, never reactive)
+  mm                           same as mm next — show what to do right now
   mm next                       show what to do right now (with elapsed time)
   mm peek                       glance at current/next/quick without committing (no timer start)
   mm done [id]                  finish current item (or a specific id), advance, archive it
@@ -489,9 +490,29 @@ def cmd_peek(state, _args):
     print()
 
 
+def book_gate_ready(item):
+    """A book gate closes by reading, not by ticking. Returns (ok, book).
+    ok is False only when the item is a book-rotation gate whose book exists,
+    isn't finished, and had no pages logged today."""
+    if item.get("track") != "books" or item.get("ref") is None:
+        return True, None
+    book = find_book(load_books(), item["ref"])
+    if book is None or book["status"] == "done":
+        return True, book
+    logged_today = book.get("last_progress_at", "").startswith(today_str())
+    return logged_today, book
+
+
 def cmd_done(state, args):
     snapshot(state)
     target_id = args.id
+
+    def refuse_unread_book(item, book):
+        state["_snapshots"].pop()  # nothing changed, don't waste an undo slot
+        print(f"\n  {warn('✗ not closed')}  {item['text']}")
+        print(f"  No pages logged today for '{book['title']}' — a book gate closes by reading, not by ticking.")
+        print(f"    log pages:  mm book progress {book['id']} <pages>")
+        print(f"    or park it: mm suspend {item['id']}   {dim('(honest — parked, not closed)')}\n")
 
     def finish(container, idx, item):
         item = state[container].pop(idx)
@@ -509,11 +530,19 @@ def cmd_done(state, args):
             state["_snapshots"].pop()  # nothing happened, don't waste an undo slot
             print("Nothing active.")
             return
+        ok, book = book_gate_ready(item)
+        if not ok:
+            refuse_unread_book(item, book)
+            return
         finish(container, idx, item)
         cmd_next(state, args)
         return
     container, idx, item = find_item(state, target_id, containers=("stack", "queue"))
     if item is not None:
+        ok, book = book_gate_ready(item)
+        if not ok:
+            refuse_unread_book(item, book)
+            return
         finish(container, idx, item)
         cmd_next(state, args)
         return
@@ -886,6 +915,7 @@ def cmd_book_progress(_state, args):
         return
     book["status"] = "active"
     book["page"] = min(book["page"] + args.pages, book["pages"])
+    book["last_progress_at"] = now_iso()
     title, pages, page = book["title"], book["pages"], book["page"]
     if page >= pages:
         book["status"] = "done"
@@ -908,6 +938,7 @@ def cmd_book_done(_state, args):
         return
     book["page"] = book["pages"]
     book["status"] = "done"
+    book["last_progress_at"] = now_iso()
     save_books(data)
     print(f"📗 Finished [{book['id']}]: {book['title']}! (marked done directly, no page count needed)")
 
@@ -1397,7 +1428,7 @@ def cmd_capacity(state, args):
 
 def main():
     p = argparse.ArgumentParser(prog="mm", description="Queue/Stack/Quick personal scheduler")
-    sub = p.add_subparsers(dest="cmd", required=True)
+    sub = p.add_subparsers(dest="cmd")
 
     a = sub.add_parser("add")
     a.add_argument("task", nargs="+")
@@ -1525,6 +1556,8 @@ def main():
     cp.set_defaults(func=cmd_capacity)
 
     args = p.parse_args()
+    if not getattr(args, "func", None):
+        args.func = cmd_next
     with Lock():
         state = load()
         args.func(state, args)
