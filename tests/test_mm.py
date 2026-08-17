@@ -20,17 +20,14 @@ import mm  # noqa: E402
 class MMTestCase(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp(prefix="mm-test-")
-        mm.STATE_DIR = self.tmp
-        mm.STATE_PATH = os.path.join(self.tmp, "state.json")
-        mm.LOCK_PATH = mm.STATE_PATH + ".lock"
-        mm.BOOKS_PATH = os.path.join(self.tmp, "books.json")
-        mm.BOOKS_CONFIG_PATH = os.path.join(self.tmp, "books_config.json")
-        mm.RULES_PATH = os.path.join(self.tmp, "mm.rules.json")
-        self._orig_weekday = mm.today_weekday_key
-        mm.today_weekday_key = lambda: "Mon"  # deterministic weekday
+        mm.use_home(self.tmp)
+        import mm.ops as ops
+        self._ops = ops
+        self._orig_weekday = ops.today_weekday_key
+        ops.today_weekday_key = lambda: "Mon"
 
     def tearDown(self):
-        mm.today_weekday_key = self._orig_weekday
+        self._ops.today_weekday_key = self._orig_weekday
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     # --- helpers ---
@@ -272,6 +269,153 @@ class TestRulesCommands(MMTestCase):
         with open(mm.RULES_PATH, encoding="utf-8") as f:
             rules = json.load(f)
         self.assertEqual(rules["capacity"]["queue"]["max"], 3)
+
+
+class TestOnboardEscapeHatches(MMTestCase):
+    def _rules(self, strict=True):
+        self.write_rules({
+            "onboard": {"strict_gate": strict, "order": ["g", "b"]},
+            "tracks": {
+                "g": {"type": "list", "dominant": True, "position": "gate",
+                      "label": "G {value}", "items": ["G1"]},
+                "b": {"type": "list", "position": "back", "label": "B {value}",
+                      "items": ["B1"]},
+            },
+        })
+
+    def test_force_onboards_with_open_gate(self):
+        self._rules(strict=True)
+        self.cli("onboard")
+        st = self.state()
+        st["onboarded_date"] = "2000-01-01"
+        self.write_state(st)
+        out = self.cli("onboard", "--force")
+        self.assertNotIn("Can't onboard", out)
+        self.assertEqual(self.state().get("onboarded_date"), mm.today_str())
+        self.assertEqual(self.texts("queue").count("G G1"), 1)
+
+    def test_again_reseeds_same_day(self):
+        self._rules(strict=False)
+        self.cli("onboard")
+        blocked = self.cli("onboard")
+        self.assertIn("already onboarded", blocked)
+        out = self.cli("onboard", "--again")
+        self.assertNotIn("already onboarded", out)
+        self.assertIn("onboarded", out.lower())
+
+    def test_reset_parks_gates_and_unlocks_onboard(self):
+        self._rules(strict=True)
+        self.cli("onboard")
+        self.assertTrue(mm.has_open_gate(self.state()))
+        out = self.cli("reset", "--park-gates")
+        self.assertIn("reset", out.lower())
+        self.assertFalse(mm.has_open_gate(self.state()))
+        self.assertIsNone(self.state().get("onboarded_date"))
+        self.assertTrue(any(it.get("suspended") for it in self.state()["queue"] if it.get("gate")))
+        again = self.cli("onboard")
+        self.assertNotIn("Can't onboard", again)
+
+    def test_reset_alone_does_not_park(self):
+        self._rules(strict=True)
+        self.cli("onboard")
+        self.cli("reset")
+        self.assertTrue(mm.has_open_gate(self.state()))
+        self.assertFalse(any(it.get("suspended") for it in self.state()["queue"]))
+        self.assertIsNone(self.state().get("onboarded_date"))
+
+    def test_reset_drop_gates_removes_them(self):
+        self._rules(strict=True)
+        self.cli("onboard")
+        archive_before = len(self.state()["archive"])
+        self.cli("reset", "--drop-gates")
+        self.assertFalse(any(it.get("gate") and not it.get("suspended") for it in self.state()["queue"]))
+        self.assertEqual(self.texts("queue"), ["B B1"])
+        self.assertEqual(len(self.state()["archive"]), archive_before)
+
+    def test_rules_strict_toggle(self):
+        self.write_rules({"onboard": {"strict_gate": True, "order": []}, "tracks": {}})
+        self.cli("rules", "strict", "off")
+        with open(mm.RULES_PATH, encoding="utf-8") as f:
+            rules = json.load(f)
+        self.assertFalse(rules["onboard"]["strict_gate"])
+        self.cli("rules", "strict", "on")
+        with open(mm.RULES_PATH, encoding="utf-8") as f:
+            rules = json.load(f)
+        self.assertTrue(rules["onboard"]["strict_gate"])
+
+
+class TestBooksFlexible(MMTestCase):
+    def _rotation_rules(self):
+        self.write_rules({
+            "onboard": {"strict_gate": False, "order": ["books"]},
+            "tracks": {
+                "books": {"type": "rotation", "count": 2, "dominant": True,
+                          "position": "gate", "label": "{value}"},
+            },
+        })
+
+    def test_add_without_pages_is_checklist_and_done_closes(self):
+        self._rotation_rules()
+        self.cli("book", "add", "Thinking", "Mathematically")
+        book = mm.load_books()["books"][0]
+        self.assertEqual(book["title"], "Thinking Mathematically")
+        self.assertEqual(book["pages"], 0)
+        self.cli("onboard")
+        self.assertEqual(self.texts("queue"), ["Thinking Mathematically"])
+        out = self.cli("done")
+        self.assertIn("done", out.lower())
+        self.assertNotIn("not closed", out.lower())
+        self.assertEqual(self.state()["queue"], [])
+
+    def test_add_with_pages_still_requires_progress(self):
+        self._rotation_rules()
+        self.cli("book", "add", "CS302", "500")
+        self.cli("onboard")
+        out = self.cli("done")
+        self.assertIn("not closed", out.lower())
+        self.assertEqual(self.texts("queue"), ["CS302"])
+
+    def test_book_daily_and_sync_prune(self):
+        self.cli("book", "add", "OLD")
+        self.cli("book", "daily", "4")
+        self.assertEqual(mm.load_books()["daily_units"], 4)
+        with open(mm.BOOKS_CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump({"daily_units": 4, "books": [
+                {"title": "CS301", "pages": 0},
+                {"title": "PSY101", "pages": 0},
+            ]}, f)
+        out = self.cli("book", "sync", "--prune")
+        self.assertIn("pruned", out.lower())
+        titles = [b["title"] for b in mm.load_books()["books"]]
+        self.assertEqual(titles, ["CS301", "PSY101"])
+
+
+class TestGenericRotation(MMTestCase):
+    def test_rotation_over_plain_items(self):
+        self.write_rules({
+            "onboard": {"strict_gate": False, "order": ["kata"]},
+            "tracks": {
+                "kata": {"type": "rotation", "count": 2, "dominant": True,
+                         "position": "gate", "label": "{value}",
+                         "items": ["A", "B", "C", "D"]},
+            },
+        })
+        self.cli("onboard")
+        q = self.texts("queue")
+        self.assertEqual(len(q), 2)
+        self.assertTrue(set(q).issubset({"A", "B", "C", "D"}))
+
+    def test_toml_config_loads(self):
+        from mm.config import dumps_toml
+        body = dumps_toml({
+            "onboard": {"strict_gate": False, "order": ["one"]},
+            "tracks": {"one": {"type": "static", "position": "back",
+                               "label": "{value}", "items": ["Hello"]}},
+        })
+        with open(mm.P.rules_toml, "w", encoding="utf-8") as f:
+            f.write(body)
+        self.cli("onboard")
+        self.assertEqual(self.texts("queue"), ["Hello"])
 
 
 if __name__ == "__main__":
