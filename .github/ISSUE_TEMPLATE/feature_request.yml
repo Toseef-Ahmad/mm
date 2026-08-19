@@ -1,0 +1,35 @@
+name: Feature request
+description: Something mm cannot express yet.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        mm adds features by removing decisions, not by adding options. Before
+        filing: most ideas are already expressible as a habit — `type`, `repeat`,
+        `position`, `gate`, `order`. If yours is, it is config rather than code.
+
+  - type: textarea
+    id: decision
+    attributes:
+      label: What decision are you making by hand today?
+      description: Describe the moment mm leaves you thinking instead of working.
+    validations:
+      required: true
+
+  - type: textarea
+    id: cannot
+    attributes:
+      label: Why the habit model cannot already say it
+      description: >
+        Which combination of `type` / `repeat` / `position` / `gate` / `order` did
+        you try, and where did it fall short?
+    validations:
+      required: true
+
+  - type: textarea
+    id: shape
+    attributes:
+      label: What you would type
+      description: The command or config you wish existed.
+      render: shell

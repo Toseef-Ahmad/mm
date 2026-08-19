@@ -1,0 +1,63 @@
+name: ci
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    # mm claims stdlib-only and Python 3.11+. This matrix is what makes that claim
+    # checkable rather than aspirational.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.11", "3.12", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Test suite
+        run: python -m unittest discover -s tests -v
+
+      - name: No third-party imports crept in
+        shell: bash
+        run: |
+          # A clean interpreter with no site-packages must still import mm.
+          python -S -c "import mm.cli, mm.ops, mm.habits, mm.obsidian, mm.books; print('stdlib-only ok')"
+
+      - name: Install as a package and drive it end to end
+        shell: bash
+        run: |
+          python -m pip install --quiet .
+          export MM_HOME="$(mktemp -d)"
+          mm --version
+          mm init
+          test -f "$MM_HOME/mm.toml"
+          mm rules validate
+          mm status
+          mm add "smoke test task"
+          mm done          # closes whatever the pointer offers
+          mm undo
+          mm stats
+          mm export > /dev/null
+
+      - name: Manual and starter config ship in the wheel
+        shell: bash
+        run: |
+          python - <<'PY'
+          import pathlib
+          import mm
+          data = pathlib.Path(mm.__file__).parent / "data"
+          for name in ("mm.1", "mm.toml"):
+              path = data / name
+              assert path.is_file(), f"{name} missing from the installed package"
+              assert path.read_text(encoding="utf-8").strip(), f"{name} is empty"
+          print("packaged data ok")
+          PY

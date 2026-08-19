@@ -1,6 +1,6 @@
 """mm — decide what's next, never when."""
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 
 from .books import load_books
 from .cli import main

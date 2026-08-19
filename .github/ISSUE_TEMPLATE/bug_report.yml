@@ -1,0 +1,61 @@
+name: Bug report
+description: mm did something wrong, or refused something it should have allowed.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The command you ran and what mm printed. Paste the output as-is.
+      placeholder: |
+        $ mm done
+        ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: >
+        Sequence matters more than anything else in mm. The bugs worth fixing are
+        usually "do A, then B, and B undoes A" — so list the commands in order.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: mm --version
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS and Python version
+      placeholder: macOS 15.3, Python 3.12.4
+
+  - type: textarea
+    id: state
+    attributes:
+      label: Relevant state (optional)
+      description: >
+        For habit or Obsidian issues, `mm export` and the matching entry from
+        `~/.mm/habits.json` turn a guess into a fix. Redact task names freely —
+        the shape of the data is what matters.
+      render: json
+
+  - type: checkboxes
+    id: obsidian
+    attributes:
+      label: Obsidian sync
+      options:
+        - label: This involves the Obsidian daily-note sync

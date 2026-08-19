@@ -1,17 +1,29 @@
 [project]
 name = "mm-focus"
-version = "2.0.0"
+dynamic = ["version"]  # single source: mm/__init__.py
 description = "Decide what's next. Never when. A CLI focus engine with queues, interrupts, and gates."
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [{name = "Toseef Ahmad"}]
-keywords = ["cli", "focus", "learning", "queue", "gtd"]
+keywords = [
+  "cli", "focus", "productivity", "queue", "gtd", "habits",
+  "habit-tracker", "obsidian", "terminal", "todo", "streaks",
+]
 classifiers = [
+  "Development Status :: 4 - Beta",
   "Environment :: Console",
+  "Intended Audience :: End Users/Desktop",
+  "Intended Audience :: Developers",
   "License :: OSI Approved :: MIT License",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Utilities",
+  "Topic :: Office/Business :: Scheduling",
 ]
 
 [project.scripts]
@@ -20,10 +32,15 @@ mm = "mm.cli:main"
 [project.urls]
 Homepage = "https://github.com/Toseef-Ahmad/mm"
 Repository = "https://github.com/Toseef-Ahmad/mm"
+Changelog = "https://github.com/Toseef-Ahmad/mm/blob/master/CHANGELOG.md"
+Issues = "https://github.com/Toseef-Ahmad/mm/issues"
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "mm.__version__"}
 
 [tool.setuptools.packages.find]
 include = ["mm*"]
