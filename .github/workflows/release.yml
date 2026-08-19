@@ -36,10 +36,12 @@ jobs:
           path: dist/
 
   pypi:
-    # Publishing is opt-in: it only runs once a PyPI trusted publisher exists for
-    # this repo, so the release job never fails on a repo without one configured.
+    # Genuinely opt-in. Without a PyPI trusted publisher this job cannot succeed,
+    # so it stays skipped until you set the repository variable PYPI_ENABLED=true
+    # (Settings -> Secrets and variables -> Actions -> Variables). Otherwise every
+    # tag would leave a red run behind for a step that was never configured.
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') && vars.PYPI_ENABLED == 'true'
     runs-on: ubuntu-latest
     environment: pypi
     permissions:

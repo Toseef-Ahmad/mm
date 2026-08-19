@@ -44,6 +44,21 @@ its own.
 - Docs live in three places that must agree: `README.md`, `mm/data/mm.1`, and the
   `--help` strings in `mm/cli.py`.
 
+## Cutting a release (maintainers)
+
+1. Bump `__version__` in `mm/__init__.py`. That is the only place a version
+   lives; the build reads it and release CI refuses a tag that disagrees.
+2. Add the section to `CHANGELOG.md`.
+3. Tag and push: `git tag -a vX.Y.Z -m "…" && git push origin vX.Y.Z`.
+4. `gh release create vX.Y.Z --notes-file …`
+
+Publishing to PyPI is off until it is configured, so a tag never leaves a failed
+run behind. To turn it on: create a PyPI [trusted publisher] for this repository
+with workflow `release.yml` and environment `pypi`, then set the repository
+variable `PYPI_ENABLED=true`.
+
+[trusted publisher]: https://docs.pypi.org/trusted-publishers/
+
 ## Reporting a bug
 
 Include `mm --version`, your OS, and the command you ran. If it involves habits
