@@ -43,14 +43,21 @@ its own.
   pins the exact sequence.
 - Docs live in three places that must agree: `README.md`, `mm/data/mm.1`, and the
   `--help` strings in `mm/cli.py`.
+- If you change what the CLI prints, re-record the landing page demo with
+  `python3 site/tools/capture.py` and commit the result. The page shows real
+  captured output, so stale frames are a lie about the tool. `site/llms.txt` is
+  the other place behaviour is described in prose.
 
 ## Cutting a release (maintainers)
 
 1. Bump `__version__` in `mm/__init__.py`. That is the only place a version
    lives; the build reads it and release CI refuses a tag that disagrees.
-2. Add the section to `CHANGELOG.md`.
-3. Tag and push: `git tag -a vX.Y.Z -m "…" && git push origin vX.Y.Z`.
-4. `gh release create vX.Y.Z --notes-file …`
+2. Re-record the landing page demo — `python3 site/tools/capture.py` — and commit
+   it. The recording carries the version the site displays, so CI fails the
+   bump until it is refreshed. Then `cd site && vercel --prod --yes`.
+3. Add the section to `CHANGELOG.md`.
+4. Tag and push: `git tag -a vX.Y.Z -m "…" && git push origin vX.Y.Z`.
+5. `gh release create vX.Y.Z --notes-file …`
 
 Publishing to PyPI is off until it is configured, so a tag never leaves a failed
 run behind. To turn it on: create a PyPI [trusted publisher] for this repository

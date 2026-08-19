@@ -48,6 +48,13 @@ jobs:
           mm stats
           mm export > /dev/null
 
+      - name: Landing page demo still matches the CLI
+        # The page at mm.tafil.app shows real captured output. If a command is
+        # renamed or dropped, the recording becomes a lie about the tool — so
+        # the capture is re-run here and its shape compared with what shipped.
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
+        run: python3 site/tools/capture.py --check
+
       - name: Manual and starter config ship in the wheel
         shell: bash
         run: |

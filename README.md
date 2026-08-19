@@ -11,6 +11,9 @@ A terminal scheduler for people who stall by choosing. One queue, a real
 interrupt stack, and **gates** that make the work you said mattered the only
 legal first move. No clocks, no calendar, no web app.
 
+**[mm.tafil.app](https://mm.tafil.app/)** — the tool in action, with the demo
+recorded from this CLI rather than mocked up.
+
 ```console
 $ mm status
   3 habit(s) due → queued
@@ -263,6 +266,11 @@ mm/
 
 State mm owns: `~/.mm/state.json`, `habits.json`, `books.json`, `obsidian.json`.
 Yours: `mm.toml`, `books_config.json`.
+
+`site/` holds the landing page — static HTML with no build step. Its demo is
+recorded from this CLI by `site/tools/capture.py`, and CI re-runs that capture to
+fail the build if the page has drifted from the tool. See
+[site/README.md](site/README.md).
 
 Want a new kind of work? Add a habit. Do not add a command if `type` + `repeat` +
 `position` + `gate` can say it.
