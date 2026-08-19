@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "name": "mm-landing",
+  "description": "Landing page for mm — mm.tafil.app",
+  "scripts": {
+    "build": "echo 'Static site - no build step'",
+    "capture": "python3 tools/capture.py",
+    "og": "node tools/make-og.mjs",
+    "dev": "python3 -m http.server 4321",
+    "deploy": "vercel --prod --yes"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2"
+  }
+}

@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mm — decide what's next, never when</title>
+<meta name="description" content="A dependency-free terminal scheduler for people who stall by choosing. One queue, a real interrupt stack, and gates that make the work you said mattered the only thing on offer. Two-way Obsidian daily-note sync. MIT.">
+<meta name="theme-color" content="#08090b">
+<link rel="canonical" href="https://mm.tafil.app/">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mm.tafil.app/">
+<meta property="og:site_name" content="mm">
+<meta property="og:title" content="mm — decide what's next, never when">
+<meta property="og:description" content="A dependency-free terminal scheduler. Gates make the work you said mattered the only thing on offer. Two-way Obsidian sync. MIT.">
+<meta property="og:image" content="https://mm.tafil.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="mm — decide what's next, never when">
+<meta name="twitter:description" content="A dependency-free terminal scheduler with gates that block procrastination, and two-way Obsidian daily-note sync.">
+<meta name="twitter:image" content="https://mm.tafil.app/og.png">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/styles.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "mm",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "macOS, Linux",
+  "description": "A dependency-free terminal scheduler with a queue, an interrupt stack, gates that block procrastination, and two-way Obsidian daily-note sync.",
+  "url": "https://mm.tafil.app/",
+  "codeRepository": "https://github.com/Toseef-Ahmad/mm",
+  "programmingLanguage": "Python",
+  "license": "https://opensource.org/licenses/MIT",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="/">
+      <span><span class="caret">&rarr;</span> mm</span>
+      <span class="ver" id="brand-version"></span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a class="hide-sm" href="#how">How it works</a>
+      <a class="hide-sm" href="#obsidian">Obsidian</a>
+      <a class="hide-sm" href="#faq">FAQ</a>
+      <a class="btn btn-ghost" href="https://github.com/Toseef-Ahmad/mm">GitHub</a>
+      <a class="btn btn-primary" href="#install">Install</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ================= hero ================= -->
+  <div class="hero wrap">
+    <h1>Decide what's next.<br><span class="never">Never when.</span></h1>
+    <p class="lede">
+      A terminal scheduler for people who stall by choosing. One queue, a real
+      interrupt stack, and <strong>gates</strong> that make the work you said
+      mattered the only thing on offer. No clocks, no calendar, no web app.
+    </p>
+
+    <div class="hero-cta">
+      <div class="install">
+        <span><span class="dollar">$</span> pipx install git+https://github.com/Toseef-Ahmad/mm.git</span>
+        <button class="copy" type="button" data-copy="pipx install git+https://github.com/Toseef-Ahmad/mm.git">copy</button>
+      </div>
+      <a class="btn btn-ghost" href="https://github.com/Toseef-Ahmad/mm">Read the source</a>
+    </div>
+
+    <p class="trust">
+      <span><b>Zero</b> dependencies</span>
+      <span><b>Python</b> 3.11+</span>
+      <span><b>MIT</b> licensed</span>
+      <span><b>macOS</b> &amp; Linux</span>
+      <span>Your data stays in <b>~/.mm</b></span>
+    </p>
+  </div>
+
+  <!-- ================= the demo ================= -->
+  <div class="wrap term-shell">
+    <div class="tabs" id="demo-tabs" role="tablist" aria-label="Demonstrations"></div>
+    <p class="tab-blurb" id="demo-blurb"></p>
+
+    <div class="term" id="demo-panel" role="tabpanel" tabindex="0" aria-label="Terminal demonstration">
+      <div class="term-bar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="term-title" id="term-title">mm</span>
+        <span class="term-live">real output</span>
+      </div>
+      <pre class="term-body" id="term-body" aria-live="polite"></pre>
+      <div class="term-foot">
+        <p class="term-note" id="term-note"></p>
+        <div class="term-btns">
+          <span class="term-count" id="term-count" aria-hidden="true"></span>
+          <button id="term-prev" type="button" aria-label="Previous step" title="Previous step">&larr;</button>
+          <button id="term-next" type="button" aria-label="Next step" title="Next step">&rarr;</button>
+          <button id="term-toggle" type="button" aria-label="Play demo" title="Play demo">&#9654;</button>
+        </div>
+      </div>
+    </div>
+    <p class="foot-note" style="text-align:center">
+      Every frame above is genuine output, recorded from the CLI by
+      <a href="https://github.com/Toseef-Ahmad/mm/blob/master/site/tools/capture.py"><code>site/tools/capture.py</code></a>.
+      Nothing on this page is a mockup.
+    </p>
+  </div>
+
+  <hr class="rule">
+
+  <!-- ================= the problem ================= -->
+  <section>
+    <div class="narrow sec-head center">
+      <p class="eyebrow">The problem</p>
+      <h2>Your to-do list is a pile of decisions</h2>
+      <p class="lede">
+        Every list you keep is a choice you have to make again tomorrow. Ten open
+        items is not ten tasks — it is ten arguments with yourself, and the one
+        that wins is the easiest, not the one that mattered.
+      </p>
+      <p class="lede" style="margin-top:18px">
+        Most tools respond by adding structure: priorities, tags, dates, four
+        quadrants. That is more input to the same argument. mm takes the argument
+        away. You describe what matters once, in one file, and from then on the
+        tool answers a single question — <em>what now</em> — with exactly one item.
+      </p>
+    </div>
+
+    <blockquote class="narrow">
+      A gate does not remind you to do the hard thing.<br>
+      It makes the easy thing <span class="accent">not an option</span>.
+    </blockquote>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ================= mechanism ================= -->
+  <section id="how">
+    <div class="wrap sec-head">
+      <p class="eyebrow">How it works</p>
+      <h2>Three containers, one rule each</h2>
+      <p class="lede">
+        The whole model fits in your head, which is the point. There is nothing to
+        configure to make it behave.
+      </p>
+    </div>
+
+    <div class="wrap">
+      <ol class="steps">
+        <li>
+          <span class="n">01</span>
+          <div>
+            <h3>The interrupt stack &mdash; for genuine urgency</h3>
+            <p>
+              LIFO. It preempts everything, then <em>unwinds</em> like a call stack,
+              so an interruption cannot quietly become your new plan. When the fire
+              is out you are returned to the exact thing you were doing.
+            </p>
+          </div>
+        </li>
+        <li>
+          <span class="n">02</span>
+          <div>
+            <h3>The queue &mdash; and the gates that hold it shut</h3>
+            <p>
+              Default work, in order. Mark the things that actually matter as
+              <code>gate = true</code>, and while any gate is open mm will not offer
+              you anything else. Items behind it are shown, greyed, and labelled
+              <code>gate-locked</code> &mdash; visible, but never what the pointer hands you.
+            </p>
+          </div>
+        </li>
+        <li>
+          <span class="n">03</span>
+          <div>
+            <h3>The quick queue &mdash; and a ceiling on the day</h3>
+            <p>
+              Sub-one-minute trivia that never surfaces mid-task; you flush it at a
+              checkpoint. And capacity limits stop the day growing past your energy
+              &mdash; overflow parks in a backlog and returns when there is room.
+            </p>
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <div class="wrap grid grid-2">
+      <div class="card">
+        <span class="k">The ritual</span>
+        <h3>Two commands, forever</h3>
+        <pre class="snippet"><span class="d">$</span> mm            <span class="d"># what to do right now</span>
+<span class="d">$</span> mm done       <span class="d"># finished — the next thing appears</span></pre>
+        <p>
+          There is no third step. No morning planning session, no inbox to process,
+          no daily review you will abandon in a week.
+        </p>
+      </div>
+      <div class="card">
+        <span class="k">The schedule</span>
+        <h3>One file you own</h3>
+        <pre class="snippet"><span class="a">[[habits]]</span>
+name = "Deep work"
+repeat = 1        <span class="d"># daily; 3 = every third day</span>
+gate = <span class="g">true</span>       <span class="d"># nothing else until this closes</span>
+order = 1         <span class="d"># front of the queue</span></pre>
+        <p>
+          Anything you return to &mdash; a book, a course, a walk &mdash; is the same
+          object. Declare it once; mm re-queues it whenever it is due.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ================= obsidian ================= -->
+  <section id="obsidian">
+    <div class="wrap sec-head">
+      <p class="eyebrow">Obsidian</p>
+      <h2>It shares your daily note instead of competing with it</h2>
+      <p class="lede">
+        If you already track habits as checkbox properties in an Obsidian daily
+        note, mm reads and writes that same list. Tick the box in Obsidian and the
+        item leaves your queue. Run <code>mm done</code> and the box gets ticked.
+        Untick it and the habit comes back.
+      </p>
+    </div>
+
+    <div class="wrap grid grid-2">
+      <div class="card">
+        <span class="k">Your note</span>
+        <pre class="snippet"><span class="d">---</span>
+type: daily
+<span class="g">reading: true</span>
+<span class="d">deep_work: false</span>
+<span class="d">---</span></pre>
+        <p>
+          Plain frontmatter. mm did not invent a format for you, and it registers
+          the properties as checkbox types in your vault so Obsidian renders them
+          as real checkboxes.
+        </p>
+      </div>
+      <div class="card accent">
+        <span class="k">Why it does not fight you</span>
+        <h3>Two sources of truth, resolved honestly</h3>
+        <p>
+          A property reading <code>false</code> is ambiguous: it could mean
+          <em>you unticked the box</em>, or <em>mm closed the item and has not
+          written the note yet</em>. Guess wrong and <code>mm done</code> undoes
+          itself &mdash; which is exactly the bug that shaped this design.
+        </p>
+        <p>
+          So mm keeps a shadow of the values both sides last agreed on. Only a
+          genuine change counts as your edit, and your ticks always win.
+        </p>
+      </div>
+    </div>
+
+    <div class="wrap" style="margin-top:16px">
+      <div class="card">
+        <span class="k">Live sync</span>
+        <pre class="snippet"><span class="d">$</span> mm obsidian watch              <span class="d"># live, in the foreground</span>
+<span class="d">$</span> mm obsidian autostart on       <span class="d"># background, across logins (macOS)</span></pre>
+        <p>
+          Sync also runs on every <code>mm</code>, <code>mm status</code> and
+          <code>mm done</code>, so you can ignore all of this and it still works.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ================= honesty ================= -->
+  <section>
+    <div class="wrap sec-head">
+      <p class="eyebrow">What it is not</p>
+      <h2>A small tool that stays small</h2>
+    </div>
+    <div class="wrap grid grid-3">
+      <div class="card">
+        <span class="k">No dependencies</span>
+        <p>
+          Standard library only, and CI proves it: a Python interpreter started
+          with no site-packages must still import mm, on 3.11 through 3.13, on
+          Linux and macOS.
+        </p>
+      </div>
+      <div class="card">
+        <span class="k">No service</span>
+        <p>
+          Nothing to sign up for, nothing that phones home, no account and no
+          sync server. It is a program on your machine.
+        </p>
+      </div>
+      <div class="card">
+        <span class="k">Your files stay yours</span>
+        <p>
+          Config is TOML you edit. State is JSON you can read. mm never rewrites
+          something you hand-edited without reading the current contents first.
+        </p>
+      </div>
+      <div class="card">
+        <span class="k">Not a calendar</span>
+        <p>
+          No times, no scheduling, no reminders, no notifications. mm answers
+          <em>what</em>. You own <em>when</em>.
+        </p>
+      </div>
+      <div class="card">
+        <span class="k">Not a team tool</span>
+        <p>
+          Single user, single machine. There is no board to share and no
+          assignee field to argue about.
+        </p>
+      </div>
+      <div class="card">
+        <span class="k">Not a habit gamifier</span>
+        <p>
+          Streaks exist because a broken one is information. There are no points
+          to farm, badges, or encouraging notifications.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ================= install ================= -->
+  <section id="install">
+    <div class="wrap sec-head">
+      <p class="eyebrow">Install</p>
+      <h2>Two minutes, then never think about it again</h2>
+      <p class="lede">Python 3.11 or newer. Nothing else.</p>
+    </div>
+
+    <div class="wrap install-grid">
+      <div class="install-card">
+        <h3>With pipx</h3>
+        <p class="why">Isolated, and <code>mm</code> lands on your PATH.</p>
+        <pre class="snippet">pipx install git+https://github.com/Toseef-Ahmad/mm.git
+mm init
+mm</pre>
+        <p style="margin-top:16px">
+          <button class="copy" type="button" data-copy="pipx install git+https://github.com/Toseef-Ahmad/mm.git&#10;mm init&#10;mm">copy</button>
+        </p>
+      </div>
+      <div class="install-card">
+        <h3>From a clone</h3>
+        <p class="why">Editable checkout, plus the <code>mm(1)</code> manual.</p>
+        <pre class="snippet">git clone https://github.com/Toseef-Ahmad/mm.git
+cd mm &amp;&amp; ./install.sh
+mm init &amp;&amp; man mm</pre>
+        <p style="margin-top:16px">
+          <button class="copy" type="button" data-copy="git clone https://github.com/Toseef-Ahmad/mm.git&#10;cd mm && ./install.sh&#10;mm init && man mm">copy</button>
+        </p>
+      </div>
+    </div>
+
+    <div class="narrow" style="margin-top:34px;text-align:center">
+      <p class="lede">
+        <code>mm init</code> writes an annotated <code>~/.mm/mm.toml</code>. Edit the
+        habits, run <code>mm</code>, and the tool takes it from there.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="https://github.com/Toseef-Ahmad/mm">Source on GitHub</a>
+        <a class="btn btn-ghost" href="https://github.com/Toseef-Ahmad/mm/blob/master/README.md">Read the docs</a>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ================= faq ================= -->
+  <section id="faq">
+    <div class="narrow sec-head">
+      <p class="eyebrow">Questions</p>
+      <h2>The honest answers</h2>
+    </div>
+    <div class="narrow" style="margin-top:34px">
+      <details>
+        <summary>How is this different from Taskwarrior or todo.txt?</summary>
+        <div class="body">
+          <p>
+            Those are excellent at storing and querying tasks. They will happily
+            show you forty items and let you pick &mdash; which is the moment mm is
+            built to remove. mm shows you one thing, and while a gate is open it
+            refuses to offer the easy alternatives.
+          </p>
+          <p>
+            It is also much smaller in scope on purpose: no dates, no recurrence
+            language, no query syntax. If you want a database of tasks, use
+            Taskwarrior. If you want something that answers <em>what now</em> and
+            will not negotiate, use mm.
+          </p>
+        </div>
+      </details>
+      <details>
+        <summary>Can I just override a gate?</summary>
+        <div class="body">
+          <p>
+            Yes. <code>mm done &lt;id&gt;</code> closes anything by id, and
+            <code>mm reset --park-gates</code> suspends leftovers. Gates govern what
+            mm <em>offers</em>, not what it permits &mdash; a tool that locked you out
+            of your own machine would just get uninstalled.
+          </p>
+          <p>
+            The value is that skipping becomes a deliberate act you have to type,
+            instead of the default outcome of a glance at a list.
+          </p>
+        </div>
+      </details>
+      <details>
+        <summary>Do I have to use Obsidian?</summary>
+        <div class="body">
+          <p>
+            No. The sync is off unless you add an <code>[obsidian]</code> block to
+            your config. mm is complete without it.
+          </p>
+        </div>
+      </details>
+      <details>
+        <summary>What happens if I miss a day?</summary>
+        <div class="body">
+          <p>
+            When the calendar day rolls over, mm drops yesterday's unfinished
+            copies, marks those due dates missed, and queues one fresh copy of
+            everything due today. Nothing piles up and nothing is queued twice.
+          </p>
+          <p>
+            Streaks are gap-aware: a <code>repeat = 3</code> habit is never punished
+            for the two days it was not due. A broken streak means you missed
+            something you actually committed to.
+          </p>
+        </div>
+      </details>
+      <details>
+        <summary>Is my data going anywhere?</summary>
+        <div class="body">
+          <p>
+            No. Everything lives in <code>~/.mm</code> as plain JSON and TOML. There
+            is no network code in the tool at all &mdash; you can check, it is about
+            5,000 lines and MIT licensed.
+          </p>
+        </div>
+      </details>
+      <details>
+        <summary>Windows?</summary>
+        <div class="body">
+          <p>
+            Untested. The core is portable Python and file locking degrades
+            gracefully without <code>fcntl</code>, but CI only covers macOS and
+            Linux, so it is not claimed. WSL works.
+          </p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap foot-inner">
+    <span class="fb"><span class="caret">&rarr;</span> mm</span>
+    <span class="foot-note" style="margin:0">Decide what's next. Never when.</span>
+    <nav class="foot-links" aria-label="Footer">
+      <a href="https://github.com/Toseef-Ahmad/mm">GitHub</a>
+      <a href="https://github.com/Toseef-Ahmad/mm/blob/master/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/Toseef-Ahmad/mm/blob/master/CONTRIBUTING.md">Contributing</a>
+      <a href="https://github.com/Toseef-Ahmad/mm/issues">Issues</a>
+      <a href="https://github.com/Toseef-Ahmad/mm/blob/master/LICENSE">MIT</a>
+    </nav>
+  </div>
+  <div class="wrap">
+    <p class="foot-note">
+      Open source under the MIT licence. This page is part of the repository
+      &mdash; <a href="https://github.com/Toseef-Ahmad/mm/tree/master/site">site/</a>
+      &mdash; and its demo is regenerated from the CLI, so it cannot drift from the tool.
+    </p>
+  </div>
+</footer>
+
+<script src="/demo-data.js"></script>
+<script src="/terminal.js" defer></script>
+<script>
+  // The version badge comes from the same capture as the demo, so it always
+  // reflects the build the frames were recorded from.
+  document.addEventListener("DOMContentLoaded", function () {
+    var el = document.getElementById("brand-version");
+    if (el && window.MM_DEMO && window.MM_DEMO.version) {
+      el.textContent = window.MM_DEMO.version.replace(/^mm\s*/, "v");
+    }
+  });
+</script>
+</body>
+</html>

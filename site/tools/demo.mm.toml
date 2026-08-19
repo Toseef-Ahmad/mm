@@ -1,0 +1,68 @@
+# The schedule used to record the demo on mm.tafil.app.
+# Nothing special: it is an ordinary mm.toml. Copy it to ~/.mm/mm.toml if you
+# want the landing page's day as your own starting point.
+
+version = 3
+
+[onboard]
+strict_gate = true
+order = []
+
+[capacity.queue]
+max = 12
+on_full = "backlog"
+
+[capacity.stack]
+max = 5
+on_full = "reject"
+
+[capacity.quick]
+max = 50
+on_full = "warn"
+
+# gate = true  -> until this is closed, mm will not offer you anything else.
+[[habits]]
+name = "Deep work"
+description = "one hard problem, no tabs"
+type = "focus"
+repeat = 1
+position = "queue"
+gate = true
+weight = 9
+obsidian = "deep_work"
+
+[[habits]]
+name = "Reading"
+description = "one chapter, no phone"
+type = "book"
+repeat = 1
+position = "queue"
+gate = true
+weight = 6
+obsidian = "reading"
+
+# No gate: real but never urgent. It waits behind the gates.
+[[habits]]
+name = "Walk"
+description = "one loop outside"
+type = "fitness"
+repeat = 1
+position = "queue"
+gate = false
+weight = 2
+obsidian = "walk"
+
+# order = 1 puts it at the front of the list — which is not the same as being
+# selectable. While a gate is open this shows as gate-locked.
+[[habits]]
+name = "Inbox triage"
+type = "admin"
+repeat = 1
+position = "queue"
+gate = false
+weight = 1
+order = 1
+obsidian = "inbox"
+
+[rewards]
+daily = "the evening is yours, guilt-free"

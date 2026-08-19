@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- ASCII only: non-ASCII goes in as XML numeric entities so this file
+       survives any editor's encoding. Render with make-og.mjs. -->
+  <defs>
+    <linearGradient id="wash" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0d1418"/>
+      <stop offset="100%" stop-color="#08090b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="0%" r="70%">
+      <stop offset="0%" stop-color="#67e8f9" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#67e8f9" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#wash)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <text x="80" y="152" font-family="Inter, Helvetica, Arial, sans-serif" font-size="66" font-weight="600" letter-spacing="-2.4" fill="#e8e8ec">Decide what&#8217;s next.</text>
+  <text x="80" y="228" font-family="Inter, Helvetica, Arial, sans-serif" font-size="66" font-weight="600" letter-spacing="-2.4" fill="#67e8f9">Never when.</text>
+
+  <rect x="80" y="290" width="1040" height="208" rx="16" fill="#0f1114" stroke="#ffffff" stroke-opacity="0.1" stroke-width="2"/>
+  <circle cx="112" cy="322" r="6" fill="#ff5f56"/>
+  <circle cx="132" cy="322" r="6" fill="#ffbd2e"/>
+  <circle cx="152" cy="322" r="6" fill="#27c93f"/>
+  <line x1="80" y1="348" x2="1120" y2="348" stroke="#ffffff" stroke-opacity="0.09" stroke-width="2"/>
+
+  <text font-family="JetBrains Mono, Menlo, Monaco, Consolas, monospace" font-size="25">
+    <tspan x="112" y="396" fill="#62626b">$ </tspan><tspan fill="#e8e8ec">mm status</tspan>
+    <tspan x="112" y="436" fill="#62626b">   4  Inbox triage  &#183; gate-locked</tspan>
+    <tspan x="112" y="476" fill="#67e8f9">&#8594;  1  </tspan><tspan fill="#e8e8ec">Deep work &#8212; one hard problem, no tabs</tspan>
+  </text>
+
+  <text x="80" y="566" font-family="JetBrains Mono, Menlo, Monaco, Consolas, monospace" font-size="23" fill="#8c8c95">mm.tafil.app</text>
+  <text x="1120" y="566" text-anchor="end" font-family="JetBrains Mono, Menlo, Monaco, Consolas, monospace" font-size="23" fill="#62626b">zero dependencies &#183; MIT &#183; Obsidian sync</text>
+</svg>

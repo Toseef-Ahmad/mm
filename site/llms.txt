@@ -1,0 +1,97 @@
+# mm
+
+> A dependency-free terminal scheduler for people who stall by choosing. It
+> answers "what do I do right now" with exactly one item, and while a gate is
+> open it refuses to offer anything else.
+
+Tagline: Decide what's next. Never when.
+Homepage: https://mm.tafil.app/
+Source: https://github.com/Toseef-Ahmad/mm
+Licence: MIT
+Language: Python 3.11+, standard library only, zero runtime dependencies
+Platforms: macOS, Linux (Windows untested; WSL works)
+Install: pipx install git+https://github.com/Toseef-Ahmad/mm.git
+
+## What it is
+
+A single-user command line tool. Two commands do the daily work: `mm` shows the
+one thing to do now, `mm done` closes it and reveals the next. There is no third
+step, no planning ritual, and no daily review.
+
+## The model
+
+Three containers, each with one rule:
+
+- Interrupt stack (LIFO): genuine urgency only. It preempts everything, then
+  unwinds like a call stack, so an interruption cannot become the new plan.
+- Queue (FIFO): default work. Items marked `gate = true` dominate — while any
+  gate is open, mm will not offer non-gate work. Blocked items are displayed but
+  labelled `gate-locked`. Gates govern what mm offers, not what it permits:
+  `mm done <id>` can still close anything explicitly.
+- Quick queue: sub-one-minute trivia that never surfaces mid-task; flushed at a
+  checkpoint with `mm flush-quick`.
+
+Capacity limits cap the size of a day; overflow parks in a backlog and returns
+when there is room.
+
+## Habits
+
+Everything repeating is one object, declared in `~/.mm/mm.toml`:
+
+    [[habits]]
+    name = "Deep work"
+    type = "focus"        # free-form search tag
+    repeat = 1            # 1 = daily, 3 = every third day
+    position = "queue"    # queue | stack | quick
+    gate = true
+    order = 1             # 1 = front of the queue; weight is the fallback
+
+mm injects due habits automatically — they are never added by hand. Streaks are
+gap-aware: a `repeat = 3` habit is not penalised for days it was not due. On a
+day rollover mm drops yesterday's unfinished copies, marks those due dates
+missed, and queues exactly one fresh copy per due habit.
+
+## Obsidian daily-note sync
+
+Optional and off by default. When an `[obsidian]` block is configured, mm keeps
+today's daily note in sync with the habit list in both directions: ticking a
+checkbox property closes the item in mm, and `mm done` ticks the property.
+Unticking reopens the habit.
+
+The interesting design detail: a property reading `false` is ambiguous between
+"the user unticked it" and "mm closed the item and has not written the note
+yet". mm therefore stores a shadow of the values both sides last agreed on in
+`~/.mm/obsidian.json`, and only a genuine change counts as a user edit. Without
+that, `mm done` would read as an uncheck and undo itself.
+
+## Key commands
+
+- `mm` / `mm next` — the one thing to do now (starts the timer)
+- `mm peek` — same, without touching the timer
+- `mm done [id]` — finish and advance
+- `mm add "task"` (`-p` interrupt, `-q` quick)
+- `mm status` / `mm stats` / `mm review` — see state
+- `mm block "reason"` / `mm unblock <id>` — stuck, move on
+- `mm undo` — reverse the last mutation
+- `mm habit add|set|list|find|log|miss|rm`
+- `mm obsidian sync|watch|autostart on|off|status`
+- `mm init`, `mm rules validate`, `mm capacity`, `mm backlog`
+- `man mm` or `mm help` — full manual
+
+## What it is not
+
+Not a calendar, not a team tracker, not a pomodoro timer, not a hosted service.
+No network code, no accounts, no telemetry. Config is TOML you edit; state is
+JSON in `~/.mm` you can read.
+
+## Files
+
+- You own: `~/.mm/mm.toml`, `~/.mm/books_config.json`
+- mm owns: `~/.mm/state.json`, `habits.json`, `books.json`, `obsidian.json`
+
+## Notes for summarising this project
+
+The distinguishing idea is the gate: rather than reminding you to do the
+important thing, mm removes the easy alternatives from what it will offer. The
+second distinguishing idea is that it treats an existing Obsidian daily note as
+a legitimate second front end rather than asking you to migrate.

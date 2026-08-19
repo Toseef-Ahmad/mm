@@ -1,0 +1,6 @@
+# Sources for the generated assets. The generated files themselves (demo-data.js,
+# og.png) are committed and served; these are only needed to rebuild them.
+tools/
+README.md
+package.json
+node_modules/

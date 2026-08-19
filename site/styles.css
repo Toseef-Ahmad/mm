@@ -1,0 +1,340 @@
+/* mm.tafil.app — hand-written CSS, no framework.
+   A page about a zero-dependency tool should not ship a CSS runtime.
+   Palette is taken from the CLI itself (mm/util.py): the pointer is ANSI 36
+   cyan, done is 32 green, interrupts are 33 yellow, secondary text is dim. */
+
+:root {
+  --bg: #08090b;
+  --surface: #0f1114;
+  --raised: #16181d;
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --text: #e8e8ec;
+  --muted: #8c8c95;
+  --faint: #62626b;
+  --accent: #67e8f9;   /* ANSI 36 — the pointer */
+  --good: #6ee787;     /* ANSI 32 — done */
+  --warn: #f2cc60;     /* ANSI 33 — interrupt */
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --gap: clamp(64px, 9vw, 120px);
+  --radius: 14px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 400 16px/1.65 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* A single wash of colour behind the hero. Nothing moves. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20% 0 auto 0;
+  height: 70vh;
+  background:
+    radial-gradient(60% 55% at 50% 0%, rgba(103, 232, 249, 0.10), transparent 70%),
+    radial-gradient(40% 40% at 82% 8%, rgba(110, 231, 135, 0.05), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrap { width: min(1080px, 100% - 40px); margin-inline: auto; position: relative; z-index: 1; }
+.narrow { width: min(760px, 100% - 40px); margin-inline: auto; }
+
+a { color: inherit; }
+a:focus-visible, button:focus-visible, summary:focus-visible, [role="tab"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+h1, h2, h3 { line-height: 1.12; letter-spacing: -0.02em; margin: 0; font-weight: 600; }
+h1 { font-size: clamp(31px, 8vw, 68px); letter-spacing: -0.035em; }
+h2 { font-size: clamp(27px, 3.6vw, 40px); }
+h3 { font-size: 17px; letter-spacing: -0.01em; }
+p { margin: 0; }
+
+.lede { color: var(--muted); font-size: clamp(16px, 1.7vw, 19px); line-height: 1.6; }
+.eyebrow {
+  font: 500 12px/1 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 18px;
+}
+.mono { font-family: var(--mono); }
+code:not(pre code) {
+  font: 500 0.9em/1 var(--mono);
+  background: var(--raised);
+  border: 1px solid var(--line);
+  padding: 0.18em 0.42em;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+/* ---------- skip link + nav ---------- */
+
+.skip {
+  position: absolute; left: -9999px; top: 0;
+  background: var(--accent); color: #04191c; padding: 10px 16px; z-index: 100;
+  font: 600 14px/1 var(--sans); border-radius: 0 0 8px 0;
+}
+.skip:focus { left: 0; }
+
+header.nav { position: sticky; top: 14px; z-index: 50; padding-top: 14px; }
+.nav-inner {
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(15, 17, 20, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 9px 9px 20px;
+}
+.brand { display: flex; align-items: baseline; gap: 9px; font: 600 17px/1 var(--mono); letter-spacing: -0.02em; text-decoration: none; }
+.brand .caret { color: var(--accent); }
+.brand .ver { font: 500 11px/1 var(--mono); color: var(--faint); }
+.nav-links { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+.nav-links a {
+  font: 500 14px/1 var(--sans); color: var(--muted); text-decoration: none;
+  padding: 9px 13px; border-radius: 999px;
+}
+.nav-links a:hover { color: var(--text); background: rgba(255, 255, 255, 0.05); }
+@media (max-width: 620px) { .nav-links a.hide-sm { display: none; } }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font: 600 14px/1 var(--sans); text-decoration: none;
+  padding: 11px 19px; border-radius: 999px; border: 1px solid transparent;
+  cursor: pointer; transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+.btn-primary { background: #fff; color: #08090b; }
+.btn-primary:hover { background: #e6feff; transform: translateY(-1px); }
+.btn-ghost { border-color: var(--line-strong); color: var(--text); background: transparent; }
+.btn-ghost:hover { background: rgba(255, 255, 255, 0.06); transform: translateY(-1px); }
+.nav-links .btn { padding: 10px 17px; }
+
+/* ---------- hero ---------- */
+
+.hero { padding: clamp(56px, 9vw, 104px) 0 0; text-align: center; }
+.hero h1 .never { color: var(--accent); }
+.hero .lede { max-width: 60ch; margin: 22px auto 0; }
+.hero-cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-items: center; margin-top: 34px; }
+
+.install {
+  display: inline-flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 999px; padding: 7px 7px 7px 18px;
+  font: 500 13.5px/1 var(--mono); color: var(--text);
+  max-width: 100%; overflow: hidden;
+}
+.install span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.install .dollar { color: var(--faint); }
+.copy {
+  border: 1px solid var(--line-strong); background: transparent; color: var(--muted);
+  font: 500 12px/1 var(--sans); padding: 8px 12px; border-radius: 999px; cursor: pointer; flex-shrink: 0;
+}
+.copy:hover { color: var(--text); background: rgba(255, 255, 255, 0.06); }
+.copy[data-done="1"] { color: var(--good); border-color: rgba(110, 231, 135, 0.4); }
+
+.trust {
+  display: flex; flex-wrap: wrap; gap: 8px 22px; justify-content: center;
+  margin-top: 26px; font: 500 12.5px/1 var(--mono); color: var(--faint);
+}
+.trust b { color: var(--muted); font-weight: 500; }
+
+/* ---------- terminal ---------- */
+
+.term-shell { margin-top: clamp(40px, 6vw, 64px); }
+.term {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.02);
+  text-align: left;
+}
+.term-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 15px; border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, #14161a, #0f1114);
+}
+.dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+.dot.r { background: #ff5f56; } .dot.y { background: #ffbd2e; } .dot.g { background: #27c93f; }
+.term-title { margin-left: 8px; font: 500 12px/1 var(--mono); color: var(--faint); }
+.term-live { margin-left: auto; display: flex; align-items: center; gap: 7px; font: 500 11px/1 var(--mono); color: var(--faint); }
+.term-live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--good); }
+
+.term-body {
+  margin: 0; padding: 20px clamp(16px, 2.4vw, 26px) 24px;
+  font: 400 clamp(12px, 1.28vw, 13.6px)/1.62 var(--mono);
+  white-space: pre-wrap; word-break: break-word;
+  /* Fixed viewport, like a real terminal: replaying a scenario scrolls inside
+     the box instead of pushing the rest of the page around. */
+  height: clamp(330px, 44vh, 430px); overflow-y: auto;
+  tab-size: 4; scrollbar-width: thin;
+}
+/* On a phone, 11px is what keeps mm's ~54-column output on one line each.
+   Wrapped terminal output reads as broken, so the type shrinks instead. */
+@media (max-width: 620px) { .term-body { font-size: 11px; height: 332px; padding-inline: 13px; } }
+@media (max-width: 430px) { .term-body { font-size: 10.2px; padding-inline: 11px; } }
+.term-body .prompt { color: var(--faint); }
+.term-body .cmd { color: var(--text); font-weight: 500; }
+.term-body .caret {
+  display: inline-block; width: 7px; height: 1.05em; vertical-align: text-bottom;
+  background: var(--accent); animation: blink 1.05s steps(2, start) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* the ANSI classes emitted by site/tools/capture.py. <i> is used because it is
+   the shortest tag available and the captures repeat it thousands of times —
+   so the italics have to be turned back off. */
+.term-body i { font-style: normal; }
+.term-body .d { color: var(--faint); }
+.term-body .b { color: #fff; font-weight: 600; }
+.term-body .a { color: var(--accent); }
+.term-body .g { color: var(--good); }
+.term-body .w { color: var(--warn); }
+
+.term-foot {
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 16px; border-top: 1px solid var(--line); background: #0c0e11;
+}
+.term-note { font: 400 13px/1.5 var(--sans); color: var(--muted); flex: 1; min-height: 2.9em; }
+.term-btns { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.term-count { font: 500 11.5px/1 var(--mono); color: var(--faint); margin-right: 4px; }
+.term-btns button {
+  background: transparent; border: 1px solid var(--line); color: var(--muted);
+  border-radius: 8px; width: 34px; height: 30px; cursor: pointer;
+  font: 500 12px/1 var(--mono);
+}
+.term-btns button:hover:not(:disabled) { color: var(--text); background: rgba(255, 255, 255, 0.05); }
+.term-btns button:disabled { opacity: 0.35; cursor: default; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin-bottom: 16px; }
+.tabs button {
+  background: var(--surface); border: 1px solid var(--line); color: var(--muted);
+  font: 500 13px/1 var(--sans); padding: 9px 16px; border-radius: 999px; cursor: pointer;
+  transition: color 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+.tabs button:hover { color: var(--text); }
+.tabs button[aria-selected="true"] {
+  color: #04191c; background: var(--accent); border-color: var(--accent); font-weight: 600;
+}
+.tab-blurb { text-align: center; color: var(--faint); font: 400 13.5px/1.5 var(--sans); margin: 0 auto 18px; max-width: 52ch; }
+
+/* ---------- sections ---------- */
+
+section { padding-block: var(--gap); }
+.sec-head { max-width: 62ch; }
+.sec-head.center { margin-inline: auto; text-align: center; }
+.sec-head h2 + .lede { margin-top: 16px; }
+
+.rule { height: 1px; background: linear-gradient(90deg, transparent, var(--line), transparent); border: 0; margin: 0; }
+
+/* Grid and flex children default to min-width:auto, so a <pre> of unbreakable
+   command text widens its column and takes the whole page with it. */
+.grid > *, .install-grid > *, .steps li, .steps li > * { min-width: 0; }
+
+.grid { display: grid; gap: 16px; margin-top: 44px; }
+.grid-3 { grid-template-columns: repeat(auto-fit, minmax(292px, 1fr)); }
+.grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+
+.card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 24px;
+}
+.card .k {
+  font: 500 11.5px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--faint); display: block; margin-bottom: 14px;
+}
+.card h3 { margin-bottom: 9px; }
+.card p { color: var(--muted); font-size: 14.5px; line-height: 1.62; }
+.card p + p { margin-top: 10px; }
+.card.accent { border-color: rgba(103, 232, 249, 0.28); background: linear-gradient(180deg, rgba(103, 232, 249, 0.05), var(--surface)); }
+.card.accent .k { color: var(--accent); }
+
+.snippet {
+  background: #0b0d10; border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px 16px; margin: 0;
+  font: 400 12.6px/1.6 var(--mono); color: var(--muted);
+  white-space: pre; overflow-x: auto;
+}
+.snippet .a { color: var(--accent); }
+.snippet .d { color: var(--faint); }
+.snippet .g { color: var(--good); }
+.snippet .w { color: var(--warn); }
+.snippet + p, p + .snippet { margin-top: 14px; }
+
+/* numbered mechanism list */
+.steps { list-style: none; padding: 0; margin: 44px 0 0; display: grid; gap: 2px; }
+.steps li {
+  display: grid; grid-template-columns: 42px 1fr; gap: 18px; align-items: start;
+  padding: 22px; background: var(--surface); border: 1px solid var(--line);
+}
+.steps li:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+.steps li:last-child { border-radius: 0 0 var(--radius) var(--radius); }
+.steps li + li { border-top: 0; }
+.steps .n {
+  font: 500 12px/1 var(--mono); color: var(--accent);
+  border: 1px solid rgba(103, 232, 249, 0.3); border-radius: 8px;
+  width: 42px; height: 30px; display: grid; place-items: center;
+}
+.steps h3 { margin-bottom: 7px; }
+.steps p { color: var(--muted); font-size: 14.5px; }
+
+/* quote / philosophy pull */
+blockquote {
+  margin: 0; padding: 30px 0 0;
+  font: 500 clamp(20px, 2.7vw, 29px)/1.35 var(--sans);
+  letter-spacing: -0.02em; text-align: center;
+}
+blockquote .accent { color: var(--accent); }
+blockquote footer { margin-top: 18px; font: 400 13.5px/1.5 var(--sans); color: var(--faint); letter-spacing: 0; }
+
+/* faq */
+details {
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
+  padding: 0 18px; margin-top: 10px;
+}
+details summary {
+  cursor: pointer; padding: 17px 0; font: 500 15px/1.4 var(--sans);
+  list-style: none; display: flex; align-items: center; gap: 12px;
+}
+details summary::-webkit-details-marker { display: none; }
+details summary::after { content: "+"; margin-left: auto; color: var(--faint); font-family: var(--mono); }
+details[open] summary::after { content: "\2212"; }
+details .body { padding: 0 0 18px; color: var(--muted); font-size: 14.5px; line-height: 1.65; }
+details .body p + p { margin-top: 10px; }
+
+/* install section */
+.install-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(288px, 1fr)); margin-top: 40px; }
+.install-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
+.install-card h3 { margin-bottom: 6px; }
+.install-card .why { color: var(--faint); font-size: 13.5px; margin-bottom: 16px; }
+
+footer.site {
+  border-top: 1px solid var(--line); padding: 40px 0 56px; margin-top: var(--gap);
+}
+.foot-inner { display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: center; }
+.foot-inner .fb { font: 600 15px/1 var(--mono); }
+.foot-inner .fb .caret { color: var(--accent); }
+.foot-links { margin-left: auto; display: flex; flex-wrap: wrap; gap: 20px; }
+.foot-links a { color: var(--muted); text-decoration: none; font-size: 14px; }
+.foot-links a:hover { color: var(--text); }
+.foot-note { color: var(--faint); font-size: 13px; margin-top: 24px; }

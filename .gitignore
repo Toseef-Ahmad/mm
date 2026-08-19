@@ -11,3 +11,5 @@ build/
 .books-*.tmp
 .books-config-*.tmp
 web/
+node_modules/
+site/.vercel/
