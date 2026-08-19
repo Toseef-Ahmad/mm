@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mm documentation — install, gates, habits, Obsidian sync, full command reference</title>
+<meta name="description" content="Complete documentation for mm, the open-source command-line to-do list: installation, the queue and gate model, repeating habits, two-way Obsidian daily-note sync, every command, and the full mm.toml configuration reference.">
+<meta name="theme-color" content="#08090b">
+<link rel="canonical" href="https://mm.tafil.app/docs">
+
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://mm.tafil.app/docs">
+<meta property="og:site_name" content="mm">
+<meta property="og:title" content="mm documentation — the complete manual">
+<meta property="og:description" content="Install, the queue and gate model, habits, two-way Obsidian sync, every command, and the full mm.toml reference.">
+<meta property="og:image" content="https://mm.tafil.app/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="mm documentation — the complete manual">
+<meta name="twitter:description" content="Install, the gate model, habits, two-way Obsidian sync, every command, and the full mm.toml reference.">
+<meta name="twitter:image" content="https://mm.tafil.app/og.png">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/styles.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "mm documentation",
+  "description": "Complete documentation for mm, an open-source command-line to-do list with gates, an interrupt stack, repeating habits and two-way Obsidian daily-note sync.",
+  "url": "https://mm.tafil.app/docs",
+  "inLanguage": "en",
+  "proficiencyLevel": "Beginner",
+  "dependencies": "Python 3.11 or newer",
+  "about": { "@type": "SoftwareApplication", "name": "mm", "applicationCategory": "DeveloperApplication" },
+  "isPartOf": { "@type": "WebSite", "name": "mm", "url": "https://mm.tafil.app/" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "mm", "item": "https://mm.tafil.app/" },
+    { "@type": "ListItem", "position": 2, "name": "Documentation", "item": "https://mm.tafil.app/docs" }
+  ]
+}
+</script>
+</head>
+<body class="docs">
+<a class="skip" href="#doc-main">Skip to content</a>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="/">
+      <span><span class="caret">&rarr;</span> mm</span>
+      <span class="ver">docs</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a class="hide-sm" href="/#why">Why mm</a>
+      <a class="hide-sm" href="/#how">How it works</a>
+      <a class="btn btn-ghost" href="https://github.com/Toseef-Ahmad/mm">GitHub</a>
+      <a class="btn btn-primary" href="#install">Install</a>
+    </nav>
+  </div>
+</header>
+
+<div class="doc-layout wrap">
+
+  <!-- ================= sidebar ================= -->
+  <aside class="doc-nav" aria-label="Documentation sections">
+    <nav>
+      <p class="doc-nav-h">Getting started</p>
+      <a href="#install">Install</a>
+      <a href="#quickstart">Your first five minutes</a>
+      <a href="#ritual">The daily ritual</a>
+
+      <p class="doc-nav-h">Concepts</p>
+      <a href="#model">The three containers</a>
+      <a href="#gates">Gates</a>
+      <a href="#capacity">Capacity and backlog</a>
+      <a href="#stuck">Blocked, suspended, undone</a>
+
+      <p class="doc-nav-h">Daily use</p>
+      <a href="#habits">Habits</a>
+      <a href="#ordering">Ordering the queue</a>
+      <a href="#streaks">Streaks and rollover</a>
+      <a href="#books">Books and rotations</a>
+
+      <p class="doc-nav-h">Obsidian</p>
+      <a href="#obsidian">Two-way sync</a>
+      <a href="#obsidian-live">Live and background sync</a>
+
+      <p class="doc-nav-h">Reference</p>
+      <a href="#commands">Every command</a>
+      <a href="#config">mm.toml reference</a>
+      <a href="#files">Files and environment</a>
+
+      <p class="doc-nav-h">Help</p>
+      <a href="#troubleshooting">Troubleshooting</a>
+      <a href="#uninstall">Uninstall</a>
+    </nav>
+  </aside>
+
+  <!-- ================= content ================= -->
+  <main class="doc-main" id="doc-main">
+
+    <p class="eyebrow">Documentation</p>
+    <h1 class="doc-title">The complete manual</h1>
+    <p class="lede">
+      Everything mm does, in the order you will need it. The same content ships
+      with the tool as a man page — run <code>man mm</code> or <code>mm help</code>
+      offline. If something here disagrees with the tool, the tool is right and
+      it is a bug worth
+      <a href="https://github.com/Toseef-Ahmad/mm/issues">reporting</a>.
+    </p>
+
+    <!-- ---------- install ---------- -->
+    <h2 id="install">Install</h2>
+    <p>
+      mm needs <strong>Python 3.11 or newer</strong> and nothing else. It has no
+      runtime dependencies — CI starts an interpreter with no site-packages at
+      all and checks that mm still imports, on Python 3.11, 3.12 and 3.13, on
+      Linux and macOS.
+    </p>
+
+    <h3>With pipx (recommended)</h3>
+    <p>Keeps mm in its own environment and puts the command on your PATH.</p>
+    <pre class="snippet">pipx install git+https://github.com/Toseef-Ahmad/mm.git
+mm --version</pre>
+
+    <h3>With pip</h3>
+    <pre class="snippet">python3 -m pip install --user git+https://github.com/Toseef-Ahmad/mm.git</pre>
+
+    <h3>From a clone</h3>
+    <p>
+      An editable checkout, plus the <code>mm(1)</code> man page installed into
+      <code>~/.local/share/man</code>.
+    </p>
+    <pre class="snippet">git clone https://github.com/Toseef-Ahmad/mm.git
+cd mm &amp;&amp; ./install.sh
+man mm</pre>
+
+    <h3>Upgrading</h3>
+    <pre class="snippet">pipx upgrade mm          <span class="d"># or, from a clone:</span>
+git pull &amp;&amp; ./install.sh</pre>
+    <p class="callout">
+      Upgrades never touch <code>~/.mm</code>. Your config, streaks and history
+      are separate from the program.
+    </p>
+
+    <!-- ---------- quickstart ---------- -->
+    <h2 id="quickstart">Your first five minutes</h2>
+
+    <h3>1. Write a starter config</h3>
+    <pre class="snippet">mm init</pre>
+    <p>
+      This writes an annotated <code>~/.mm/mm.toml</code>. It is the only file
+      you need to understand, and it is yours — mm reads it and never rewrites
+      it behind your back.
+    </p>
+
+    <h3>2. Describe your day, once</h3>
+    <p>
+      Open <code>~/.mm/mm.toml</code> and replace the example habits with two or
+      three things that actually matter. Mark the non-negotiable ones as gates.
+    </p>
+    <pre class="snippet"><span class="a">[[habits]]</span>
+name = "Deep work"
+description = "one hard problem, no tabs"
+repeat = 1              <span class="d"># every day</span>
+position = "queue"
+gate = <span class="g">true</span>             <span class="d"># nothing else is offered until this closes</span>
+weight = 9
+
+<span class="a">[[habits]]</span>
+name = "Walk"
+repeat = 1
+position = "queue"
+gate = <span class="g">false</span>            <span class="d"># real, but never urgent</span>
+weight = 2</pre>
+    <p>
+      Start with fewer gates than feels right. Two is plenty; a day where
+      everything is a gate is a day with no gates.
+    </p>
+
+    <h3>3. Check it parses</h3>
+    <pre class="snippet">mm rules validate</pre>
+
+    <h3>4. Work</h3>
+    <pre class="snippet">mm        <span class="d"># the one thing to do right now</span>
+mm done   <span class="d"># finished; the next thing appears</span></pre>
+    <p>
+      There is no step 5. Due habits are queued for you the first time mm runs
+      each day — you never add them by hand.
+    </p>
+
+    <!-- ---------- ritual ---------- -->
+    <h2 id="ritual">The daily ritual</h2>
+    <p>Two commands carry the whole day.</p>
+    <div class="def">
+      <div><code>mm</code></div>
+      <div>
+        Shows the one item to do now and starts its timer. Same as
+        <code>mm next</code>. Use <code>mm peek</code> for the same glance
+        without touching the timer.
+      </div>
+      <div><code>mm done</code></div>
+      <div>
+        Closes the active item — or <code>mm done 7</code> to close a specific
+        id — credits any streak, and prints what is next.
+      </div>
+    </div>
+    <p>
+      Everything else in this manual is either configuration you do once, or an
+      escape hatch for a day that went sideways.
+    </p>
+
+    <!-- ---------- model ---------- -->
+    <h2 id="model">The three containers</h2>
+    <p>
+      mm holds work in three places and always looks at them in the same order.
+      That order is the entire scheduling algorithm; there is no scoring, no
+      machine learning, and nothing that changes based on the time of day.
+    </p>
+
+    <h3>1. The interrupt stack &mdash; LIFO</h3>
+    <p>
+      Genuine urgency only, pushed with <code>mm add -p "prod is down"</code>. It
+      preempts everything. When you close it, the stack <em>unwinds</em> and you
+      are returned to the exact item you were on, the way a function returns to
+      its caller. This is the point: an interruption cannot quietly become your
+      new plan.
+    </p>
+    <pre class="snippet">mm add -p "prod is down"    <span class="d"># jumps the queue</span>
+mm                          <span class="d"># → prod is down</span>
+mm done                     <span class="d"># → back to what you were doing</span></pre>
+
+    <h3>2. The main queue &mdash; FIFO, with gates</h3>
+    <p>
+      Default work, in order. This is where habits land and where
+      <code>mm add "task"</code> puts things. While any gate is open, non-gate
+      items here are visible but not offered. See <a href="#gates">Gates</a>.
+    </p>
+
+    <h3>3. The quick queue</h3>
+    <p>
+      Sub-one-minute trivia, added with <code>mm add -q "reply to Sam"</code>. It
+      is never surfaced mid-task, because a 40-second job that interrupts deep
+      work does not cost 40 seconds. You clear it deliberately at a checkpoint:
+    </p>
+    <pre class="snippet">mm flush-quick</pre>
+
+    <!-- ---------- gates ---------- -->
+    <h2 id="gates">Gates</h2>
+    <p>
+      A gate is work you have declared dominant. While one is open, <code>mm</code>
+      will not offer you anything that is not a gate. Blocked items still appear
+      in <code>mm status</code>, greyed out and labelled <code>gate-locked</code>,
+      because a tool that silently hides things is a tool you stop trusting.
+    </p>
+    <pre class="snippet">  <span class="b">queue</span>  <span class="d">4/12</span>   <span class="a">gate open — only gate items selectable</span>
+     <span class="d">4  Inbox triage  · gate-locked</span>
+  <span class="a">→</span>  1  Deep work — one hard problem, no tabs
+     2  Reading — one chapter, no phone
+     <span class="d">3  Walk — one loop outside  · gate-locked</span></pre>
+    <p>
+      Note that <code>Inbox triage</code> is first in the list and still not
+      selected. Ordering and selectability are different things: you can put an
+      item at the top of the queue and a gate will still keep the pointer off it.
+    </p>
+
+    <h3>Gates are a constraint, not a cage</h3>
+    <p>
+      <code>mm done &lt;id&gt;</code> closes anything by id, including a
+      gate-locked item, and <code>mm reset --park-gates</code> suspends leftovers.
+      Gates govern what mm <em>offers</em>, not what it permits — a tool that
+      locked you out of your own machine would simply get uninstalled. What the
+      gate buys you is that skipping becomes a deliberate act you have to type,
+      rather than the default result of glancing at a list.
+    </p>
+
+    <h3>Strict gate and the day boundary</h3>
+    <p>
+      With <code>strict_gate = true</code> (the default), <code>mm onboard</code>
+      refuses to seed a new day while yesterday's gates are still open. Park them
+      honestly instead of pretending they happened:
+    </p>
+    <pre class="snippet">mm reset --park-gates    <span class="d"># suspend leftovers, keep the history</span>
+mm reset --drop-gates    <span class="d"># remove them (not archived)</span>
+mm rules strict off      <span class="d"># if you want the lock gone entirely</span></pre>
+
+    <!-- ---------- capacity ---------- -->
+    <h2 id="capacity">Capacity and the backlog</h2>
+    <p>
+      Each container has a ceiling, so a day cannot grow past the energy you have
+      for it. When the queue is full, what happens next is your choice:
+    </p>
+    <div class="def">
+      <div><code>backlog</code></div>
+      <div>Park the overflow. It returns automatically when there is room.</div>
+      <div><code>reject</code></div>
+      <div>Refuse the add outright. Sensible for the interrupt stack.</div>
+      <div><code>warn</code></div>
+      <div>Accept it, but say so.</div>
+    </div>
+    <pre class="snippet">mm capacity                 <span class="d"># show all three limits</span>
+mm capacity queue 12        <span class="d"># set the queue ceiling</span>
+mm backlog                  <span class="d"># what is parked</span>
+mm backlog --promote        <span class="d"># pull items back in now</span></pre>
+
+    <!-- ---------- stuck ---------- -->
+    <h2 id="stuck">When you are stuck, or wrong</h2>
+    <div class="def">
+      <div><code>mm block "waiting on review"</code></div>
+      <div>You cannot proceed. Requeues the item with a reason and moves you on.</div>
+      <div><code>mm unblock 7 [--front]</code></div>
+      <div>Clear the block. Queue items can jump back to the front.</div>
+      <div><code>mm suspend [id]</code></div>
+      <div>Park something without pretending it is finished.</div>
+      <div><code>mm resume [id] [--all]</code></div>
+      <div>Bring parked work back. Most recent first if you omit the id.</div>
+      <div><code>mm move 7 queue|stack|quick</code></div>
+      <div>Reclassify without losing the id or its history. <code>--front</code> puts it at the head of the queue.</div>
+      <div><code>mm undo</code></div>
+      <div>Reverse the last change to state. Useful after a mistaken <code>done</code>.</div>
+    </div>
+
+    <!-- ---------- habits ---------- -->
+    <h2 id="habits">Habits</h2>
+    <p>
+      A habit is anything that comes back: a book, a course, a walk, a review.
+      They are the only object you configure, and they are declared once in
+      <code>~/.mm/mm.toml</code>. When mm loads and a habit is due, it is injected
+      into the container you chose. You never add it by hand, and it never sits in
+      a list on a day it is not due.
+    </p>
+
+    <h3>Every field</h3>
+    <div class="table-wrap">
+      <table class="cmp ref">
+        <thead>
+          <tr><th scope="col">Field</th><th scope="col">Default</th><th scope="col">What it does</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row"><code>name</code></th><td>required</td><td>What you see in the queue, and how you refer to it on the CLI.</td></tr>
+          <tr><th scope="row"><code>description</code></th><td>empty</td><td>The clause after the em dash. Use it to define <em>done</em>: "one chapter, no phone".</td></tr>
+          <tr><th scope="row"><code>type</code></th><td><code>habit</code></td><td>A free-form search tag: <code>book</code>, <code>course</code>, <code>fitness</code>. Filter with <code>mm habit list -t book</code>.</td></tr>
+          <tr><th scope="row"><code>repeat</code></th><td><code>1</code></td><td>Due every N days. <code>1</code> is daily, <code>3</code> is every third day.</td></tr>
+          <tr><th scope="row"><code>days</code></th><td>unset</td><td>Restrict to weekdays, e.g. <code>"Mon,Wed,Fri"</code>.</td></tr>
+          <tr><th scope="row"><code>position</code></th><td><code>queue</code></td><td><code>queue</code>, <code>stack</code> or <code>quick</code> — which container it is injected into.</td></tr>
+          <tr><th scope="row"><code>gate</code></th><td><code>false</code></td><td>Dominant work. While it is open, nothing non-gate is offered.</td></tr>
+          <tr><th scope="row"><code>weight</code></th><td><code>1</code></td><td>Higher sorts earlier, when no explicit order is set.</td></tr>
+          <tr><th scope="row"><code>order</code></th><td>unset</td><td>Explicit queue position; <code>1</code> is the front. Overrides weight.</td></tr>
+          <tr><th scope="row"><code>enabled</code></th><td><code>1</code></td><td>Set to <code>0</code> to stop queueing it without deleting the history.</td></tr>
+          <tr><th scope="row"><code>archived</code></th><td><code>0</code></td><td>Retire it entirely, keeping the record.</td></tr>
+          <tr><th scope="row"><code>obsidian</code></th><td>slug of name</td><td>The daily-note property this habit maps to. See <a href="#obsidian">Obsidian</a>.</td></tr>
+          <tr><th scope="row"><code>tags</code></th><td>unset</td><td>Extra search terms for <code>mm habit find</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>From the command line</h3>
+    <p>Editing the TOML is the normal path, but every field is reachable without it.</p>
+    <pre class="snippet">mm habit add "Reading" -t book -r 1 --gate -w 6 -d "one chapter, no phone"
+mm habit list                 <span class="d"># the schedule, with streaks</span>
+mm habit list -t book         <span class="d"># filter by type</span>
+mm habit find walk            <span class="d"># search name, type, tags, description</span>
+mm habit set Reading gate false
+mm habit set Reading weight 8
+mm habit log Reading          <span class="d"># done/missed history</span>
+mm habit miss Reading         <span class="d"># today did not happen; resets the streak</span>
+mm habit rm Reading</pre>
+
+    <!-- ---------- ordering ---------- -->
+    <h2 id="ordering">Ordering the queue</h2>
+    <p>
+      Two knobs, and they are not the same. <code>weight</code> is a soft sort —
+      higher goes earlier. <code>order</code> is explicit: <code>1</code> means
+      front of the queue, and it wins over weight.
+    </p>
+    <pre class="snippet">mm habit set Meditation order 1      <span class="d"># pin it to the top</span>
+mm habit set Meditation order none   <span class="d"># back to weight ordering</span></pre>
+    <p class="callout">
+      Being first in the list is not the same as being selectable. If a gate is
+      open, an <code>order = 1</code> item that is not itself a gate will sit at
+      the top marked <code>gate-locked</code> while the pointer skips past it.
+      That is working as intended, and the label is there so it is never a
+      mystery.
+    </p>
+
+    <!-- ---------- streaks ---------- -->
+    <h2 id="streaks">Streaks and the day rollover</h2>
+    <p>
+      Streaks are <strong>gap-aware</strong>. A <code>repeat = 3</code> habit is
+      never punished for the two days in between when it was not due. A broken
+      streak therefore means you missed something you actually committed to,
+      which is the only version of the number worth having.
+    </p>
+    <p>When the calendar day turns over, mm does three things on the next run:</p>
+    <ol>
+      <li>Drops yesterday's unfinished copies of due habits, so nothing appears twice.</li>
+      <li>Marks those due dates missed, resetting the affected streaks.</li>
+      <li>Queues exactly one fresh copy of everything due today.</li>
+    </ol>
+    <p>
+      Habits completed yesterday keep their streak. Leftover non-habit tasks stay
+      where they are — mm does not throw away work you added yourself.
+    </p>
+    <pre class="snippet">mm review     <span class="d"># what happened today: done, missed, gates, streak</span>
+mm stats      <span class="d"># the longer view</span>
+mm log 20     <span class="d"># the last 20 events</span></pre>
+
+    <!-- ---------- books ---------- -->
+    <h2 id="books">Books and rotations</h2>
+    <p>
+      Books are a rotation source for anything you return to across many days: a
+      textbook, a course, a paper. With a page count, mm tracks progress and
+      requires it before a paged gate can be closed. Without one, it behaves as a
+      repeating checklist.
+    </p>
+    <pre class="snippet">mm book add "CS302" 640     <span class="d"># title, optional page count</span>
+mm book daily 2             <span class="d"># how many book units a day picks up</span>
+mm book progress 3 24       <span class="d"># log 24 pages against book 3</span>
+mm book list
+mm book done 3              <span class="d"># finished the course; drop from rotation</span></pre>
+    <p>
+      For a plain daily checklist, prefer a habit with <code>type = "book"</code>.
+      Rotation <em>tracks</em> declared in <code>mm.toml</code> also exist, cycle
+      by calendar day, and require <code>mm onboard</code> plus an entry in
+      <code>onboard.order</code> — a track missing from that list stays silent.
+    </p>
+
+    <!-- ---------- obsidian ---------- -->
+    <h2 id="obsidian">Obsidian: two-way daily-note sync</h2>
+    <p>
+      If you already track habits as checkbox properties in an Obsidian daily
+      note, mm reads and writes that same list rather than asking you to keep two.
+      Tick a box in Obsidian and the item leaves your queue with its streak
+      credited. Run <code>mm done</code> and the box gets ticked for you. Untick
+      it and the habit comes back.
+    </p>
+
+    <h3>Turn it on</h3>
+    <pre class="snippet"><span class="a">[obsidian]</span>
+enabled = <span class="g">true</span>
+vault = "/Users/you/Documents/Obsidian/MyVault"
+folder = "20 Journal/Personal"          <span class="d"># where daily notes live</span>
+template = "80 System/Templates/Daily Journal Template.md"  <span class="d"># optional</span></pre>
+    <p>
+      Each habit maps to a property named by its <code>obsidian</code> field, or
+      a slug of its name if you leave that out. mm also registers those properties
+      as checkbox types in your vault, so Obsidian renders them as real checkboxes
+      rather than the words <code>true</code> and <code>false</code>.
+    </p>
+    <pre class="snippet"><span class="d">---</span>
+type: daily
+<span class="g">reading: true</span>
+<span class="d">deep_work: false</span>
+<span class="d">---</span></pre>
+
+    <h3>Why it does not fight you</h3>
+    <p>
+      A property reading <code>false</code> is ambiguous. It might mean <em>you
+      unticked the box</em>, or <em>mm closed the item and has not written the note
+      yet</em>. Guess wrong and <code>mm done</code> appears to undo itself — which
+      is exactly the bug that shaped this design.
+    </p>
+    <p>
+      So mm keeps a shadow of the values both sides last agreed on in
+      <code>~/.mm/obsidian.json</code>. Only a value that genuinely changed since
+      the last sync counts as your edit. Your ticks always win, and mm never
+      clobbers a note without reading its current contents first.
+    </p>
+
+    <h2 id="obsidian-live">Live and background sync</h2>
+    <p>
+      Sync already runs on every <code>mm</code>, <code>mm status</code> and
+      <code>mm done</code>, so you can ignore this section entirely. If you want
+      the queue to react while you are inside Obsidian:
+    </p>
+    <pre class="snippet">mm obsidian sync              <span class="d"># once, now</span>
+mm obsidian watch             <span class="d"># live, in the foreground, until Ctrl-C</span>
+mm obsidian autostart on      <span class="d"># background, across logins (macOS)</span>
+mm obsidian autostart status
+mm obsidian autostart off</pre>
+    <p class="callout">
+      <strong>macOS:</strong> the system withholds Desktop and Documents from
+      background agents. If your vault is in either, grant <strong>Full Disk
+      Access</strong> to the Python interpreter that <code>autostart on</code>
+      names. The command refuses to report success until it has actually seen the
+      watcher running, so it will tell you if this is the problem.
+    </p>
+
+    <!-- ---------- commands ---------- -->
+    <h2 id="commands">Every command</h2>
+    <p>
+      Bare <code>mm</code> is <code>mm next</code>. Run <code>mm help</code> or
+      <code>man mm</code> for the same reference offline.
+    </p>
+
+    <h3>Work</h3>
+    <div class="table-wrap">
+      <table class="cmp ref">
+        <tbody>
+          <tr><th scope="row"><code>mm</code> &middot; <code>mm next</code></th><td>The one thing to do now; starts its timer.</td></tr>
+          <tr><th scope="row"><code>mm peek</code></th><td>The same glance without starting the timer.</td></tr>
+          <tr><th scope="row"><code>mm done [id]</code></th><td>Finish and advance.</td></tr>
+          <tr><th scope="row"><code>mm add "task"</code></th><td>Enqueue. <code>-p</code> pushes an interrupt, <code>-q</code> sends it to the quick queue.</td></tr>
+          <tr><th scope="row"><code>mm block [reason]</code></th><td>Stuck: requeue with a reason and move on.</td></tr>
+          <tr><th scope="row"><code>mm unblock &lt;id&gt; [--front]</code></th><td>Clear a block.</td></tr>
+          <tr><th scope="row"><code>mm suspend [id]</code></th><td>Park without finishing.</td></tr>
+          <tr><th scope="row"><code>mm resume [id] [--all]</code></th><td>Bring parked work back.</td></tr>
+          <tr><th scope="row"><code>mm move &lt;id&gt; queue|stack|quick</code></th><td>Reclassify, keeping id and history.</td></tr>
+          <tr><th scope="row"><code>mm edit &lt;id&gt;</code> &middot; <code>mm note &lt;id&gt;</code> &middot; <code>mm rm &lt;id&gt;</code></th><td>Change the text, attach a note, remove it.</td></tr>
+          <tr><th scope="row"><code>mm flush-quick</code></th><td>Clear the quick queue at a checkpoint.</td></tr>
+          <tr><th scope="row"><code>mm undo</code></th><td>Reverse the last change to state.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>The day</h3>
+    <div class="table-wrap">
+      <table class="cmp ref">
+        <tbody>
+          <tr><th scope="row"><code>mm init [--force]</code></th><td>Write a starter <code>~/.mm/mm.toml</code>.</td></tr>
+          <tr><th scope="row"><code>mm onboard</code></th><td>Seed today from config, once per day. <code>-n</code> overrides the rotation count, <code>--force</code> seeds despite leftover gates, <code>--again</code> re-seeds.</td></tr>
+          <tr><th scope="row"><code>mm reset</code></th><td>Clear today's onboard lock. <code>--park-gates</code> suspends leftovers, <code>--drop-gates</code> removes them.</td></tr>
+          <tr><th scope="row"><code>mm start [label]</code> &middot; <code>mm stop</code></th><td>Time a session by hand.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Looking at it</h3>
+    <div class="table-wrap">
+      <table class="cmp ref">
+        <tbody>
+          <tr><th scope="row"><code>mm status</code></th><td>All three containers, with gate state.</td></tr>
+          <tr><th scope="row"><code>mm review</code> &middot; <code>mm stats</code></th><td>Today in numbers; the longer view.</td></tr>
+          <tr><th scope="row"><code>mm session</code></th><td>The current timer.</td></tr>
+          <tr><th scope="row"><code>mm log [n]</code></th><td>Recent events.</td></tr>
+          <tr><th scope="row"><code>mm archive [today]</code></th><td>What has been closed.</td></tr>
+          <tr><th scope="row"><code>mm find &lt;query&gt;</code></th><td>Search open work.</td></tr>
+          <tr><th scope="row"><code>mm export [json|md|csv]</code></th><td>Everything, in a format you can keep.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Rules, capacity, habits, Obsidian, books</h3>
+    <div class="table-wrap">
+      <table class="cmp ref">
+        <tbody>
+          <tr><th scope="row"><code>mm rules show|validate</code></th><td>Today's compiled plan; check the config parses.</td></tr>
+          <tr><th scope="row"><code>mm rules strict on|off</code></th><td>The leftover-gate lock.</td></tr>
+          <tr><th scope="row"><code>mm capacity [container] [max]</code></th><td>Show or set a ceiling.</td></tr>
+          <tr><th scope="row"><code>mm backlog [--promote]</code></th><td>What overflowed, and pull it back.</td></tr>
+          <tr><th scope="row"><code>mm habit add|set|list|find|log|miss|rm</code></th><td>Manage repeating items. See <a href="#habits">Habits</a>.</td></tr>
+          <tr><th scope="row"><code>mm obsidian sync|watch|autostart</code></th><td>Daily-note sync. See <a href="#obsidian">Obsidian</a>.</td></tr>
+          <tr><th scope="row"><code>mm book add|progress|done|list|daily|sync|rm</code></th><td>The rotation source. See <a href="#books">Books</a>.</td></tr>
+          <tr><th scope="row"><code>mm help</code> &middot; <code>mm --version</code></th><td>The manual; the version.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ---------- config ---------- -->
+    <h2 id="config">mm.toml reference</h2>
+    <p>
+      One file, at <code>~/.mm/mm.toml</code>. You own it. Everything else under
+      <code>~/.mm</code> is mm's memory and should not be hand-edited.
+    </p>
+    <pre class="snippet">version = 3
+
+<span class="a">[onboard]</span>
+strict_gate = <span class="g">true</span>          <span class="d"># refuse a new day while old gates are open</span>
+order = []                  <span class="d"># which named tracks onboard, in order</span>
+
+<span class="a">[capacity.queue]</span>
+max = 14
+on_full = "backlog"         <span class="d"># backlog | reject | warn</span>
+
+<span class="a">[capacity.stack]</span>
+max = 5
+on_full = "reject"
+
+<span class="a">[capacity.quick]</span>
+max = 50
+on_full = "warn"
+
+<span class="a">[rewards]</span>
+daily = "The rest of the evening is yours."   <span class="d"># printed when all gates close</span>
+
+<span class="a">[obsidian]</span>                  <span class="d"># optional; omit to disable entirely</span>
+enabled = <span class="g">true</span>
+vault = "/path/to/vault"
+folder = "20 Journal/Personal"
+template = "80 System/Templates/Daily Journal Template.md"
+
+<span class="a">[[habits]]</span>                 <span class="d"># repeat this block per habit</span>
+name = "CS302"
+type = "book"
+repeat = 1
+position = "queue"
+gate = <span class="g">true</span>
+weight = 10
+obsidian = "cs302"</pre>
+    <p>
+      Legacy <code>~/.mm/mm.rules.json</code> still loads if no TOML exists. When
+      both are present, TOML wins.
+    </p>
+
+    <!-- ---------- files ---------- -->
+    <h2 id="files">Files and environment</h2>
+    <div class="table-wrap">
+      <table class="cmp ref">
+        <thead><tr><th scope="col">Path</th><th scope="col">Owner</th><th scope="col">Contents</th></tr></thead>
+        <tbody>
+          <tr><th scope="row"><code>~/.mm/mm.toml</code></th><td class="yes">You</td><td>The schedule: habits, capacity, rewards, Obsidian.</td></tr>
+          <tr><th scope="row"><code>~/.mm/books_config.json</code></th><td class="yes">You</td><td>The declared reading list for paged books.</td></tr>
+          <tr><th scope="row"><code>~/.mm/state.json</code></th><td>mm</td><td>Queue, stack, quick, backlog, archive, session.</td></tr>
+          <tr><th scope="row"><code>~/.mm/habits.json</code></th><td>mm</td><td>Streaks, misses, last done, points.</td></tr>
+          <tr><th scope="row"><code>~/.mm/books.json</code></th><td>mm</td><td>Book progress.</td></tr>
+          <tr><th scope="row"><code>~/.mm/obsidian.json</code></th><td>mm</td><td>The shadow of the last agreed sync state.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Writes are atomic and guarded by an advisory lock, so two terminals cannot
+      corrupt state between them.
+    </p>
+
+    <h3>Environment variables</h3>
+    <div class="def">
+      <div><code>MM_HOME</code></div>
+      <div>The data directory. Defaults to <code>~/.mm</code>. Set it to try mm without touching your real setup.</div>
+      <div><code>NO_COLOR</code></div>
+      <div>Disable colour. Colour is also off automatically when stdout is not a terminal.</div>
+      <div><code>MM_STATE</code>, <code>MM_HABITS</code>, <code>MM_BOOKS</code>, <code>MM_BOOKS_CONFIG</code>, <code>MM_RULES</code></div>
+      <div>Override individual file paths.</div>
+    </div>
+    <pre class="snippet">MM_HOME=$(mktemp -d) mm init &amp;&amp; MM_HOME=... mm status   <span class="d"># a throwaway sandbox</span></pre>
+
+    <!-- ---------- troubleshooting ---------- -->
+    <h2 id="troubleshooting">Troubleshooting</h2>
+
+    <h3><code>mm</code> shows nothing and says "no config yet"</h3>
+    <p>Run <code>mm init</code>. mm will not invent a schedule for you.</p>
+
+    <h3>The pointer skips the item at the top of my queue</h3>
+    <p>
+      A gate is open. Look for <code>gate-locked</code> on that line — it is
+      ordered first but not selectable. Close the gate, or close it explicitly
+      with <code>mm done &lt;id&gt;</code>. See <a href="#ordering">Ordering</a>.
+    </p>
+
+    <h3>Ticking a box in Obsidian does nothing</h3>
+    <p>
+      Check three things: <code>enabled = true</code> in the <code>[obsidian]</code>
+      block; that <code>vault</code> and <code>folder</code> point at the folder
+      holding <em>today's</em> note; and that the property name matches the habit's
+      <code>obsidian</code> field. Then run <code>mm obsidian sync</code> and read
+      what it prints. For instant reaction, use <code>mm obsidian watch</code>.
+    </p>
+
+    <h3><code>mm obsidian autostart on</code> reports that it could not start</h3>
+    <p>
+      On macOS this is nearly always Full Disk Access. Background agents cannot
+      read <code>~/Desktop</code> or <code>~/Documents</code> without it. Grant it
+      to the interpreter path the command printed, then run it again.
+    </p>
+
+    <h3>I closed the wrong thing</h3>
+    <p><code>mm undo</code>. It reverses the last change to state, including a <code>done</code>.</p>
+
+    <h3>Duplicate habits in the queue</h3>
+    <p>
+      This was a real bug and is fixed: mm now collapses duplicates and drops
+      stale copies at the day boundary. If you can still reproduce it on the
+      latest version, that is worth
+      <a href="https://github.com/Toseef-Ahmad/mm/issues">an issue</a> with your
+      <code>mm export</code> output.
+    </p>
+
+    <h3>Is my data going anywhere?</h3>
+    <p>
+      No. There is no network code in the tool. Everything is plain JSON and TOML
+      under <code>~/.mm</code>, and the whole program is about 5,000 lines of
+      MIT-licensed Python you can read.
+    </p>
+
+    <!-- ---------- uninstall ---------- -->
+    <h2 id="uninstall">Uninstall</h2>
+    <pre class="snippet">pipx uninstall mm
+rm -rf ~/.mm              <span class="d"># only if you want the history gone too</span></pre>
+    <p>
+      If you used <code>./install.sh</code>, remove <code>~/bin/mm</code> and
+      <code>~/.local/share/man/man1/mm.1</code>. Nothing else is written anywhere
+      on your system, and there is no account to close.
+    </p>
+
+    <div class="doc-end">
+      <h3>Still stuck?</h3>
+      <p>
+        Open an issue with <code>mm --version</code>, your OS, and the command you
+        ran. If it involves habits or Obsidian, <code>mm export</code> and the
+        relevant part of <code>~/.mm/habits.json</code> make the difference
+        between a guess and a fix — redact freely, the schema matters more than
+        your task names.
+      </p>
+      <div class="hero-cta" style="justify-content:flex-start">
+        <a class="btn btn-primary" href="https://github.com/Toseef-Ahmad/mm/issues">Open an issue</a>
+        <a class="btn btn-ghost" href="https://github.com/Toseef-Ahmad/mm">Read the source</a>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<footer class="site">
+  <div class="wrap foot-inner">
+    <span class="fb"><span class="caret">&rarr;</span> mm</span>
+    <span class="foot-note" style="margin:0">Decide what's next. Never when.</span>
+    <nav class="foot-links" aria-label="Footer">
+      <a href="/">Home</a>
+      <a href="/docs">Docs</a>
+      <a href="https://github.com/Toseef-Ahmad/mm">GitHub</a>
+      <a href="https://github.com/Toseef-Ahmad/mm/blob/master/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/Toseef-Ahmad/mm/blob/master/LICENSE">MIT</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>

@@ -12,18 +12,28 @@ zero-dependency tool should not ship a CSS runtime and a bundler.
 ```
 site/
   index.html        the page
+  docs.html         the manual — the same content as mm(1), in one page
   styles.css        all styling; palette taken from the CLI itself
   terminal.js       the demo player + copy-to-clipboard
   demo-data.js      GENERATED — real captured CLI output
   og.png            GENERATED — link preview image
+  llms-full.txt     GENERATED — docs.html as plain text, for AI crawlers
   favicon.svg
   robots.txt  sitemap.xml  llms.txt
   vercel.json       headers + static config
+  launch/           NOT DEPLOYED — Product Hunt copy and images
+    product-hunt.md   the launch kit: fields, first comment, checklist
+    gallery/          GENERATED — 1270x760 slides
+    thumbnail-240.png GENERATED
   tools/
-    capture.py      regenerates demo-data.js from the real CLI
-    demo.mm.toml    the schedule the demo is recorded against
-    og.svg          source for og.png
-    make-og.mjs     og.svg -> og.png
+    capture.py        regenerates demo-data.js from the real CLI
+    demo.mm.toml      the schedule the demo is recorded against
+    make-llms-full.py docs.html -> llms-full.txt
+    gallery.html      draws the launch slides from the captured demo data
+    thumbnail.html    the 240x240 feed mark
+    make-gallery.py   screenshots both into launch/
+    og.svg            source for og.png
+    make-og.mjs       og.svg -> og.png
 ```
 
 ## The demo is real output
@@ -46,6 +56,38 @@ is worse than no demo, and this is the only guard against that.
 
 The colour classes map to `mm/util.py`: `a` = ANSI 36 (the cyan pointer),
 `g` = 32 (done), `w` = 33 (interrupts), `b` = bold, `d` = dim.
+
+## Documentation, and the copy AI crawlers read
+
+`docs.html` is the manual. It covers the same ground as `mm/data/mm.1`, so the
+two have to be changed together — CI does not compare their prose, only a human
+can.
+
+`llms-full.txt` is generated from `docs.html` and is what assistants and search
+crawlers ingest. Never edit it by hand; CI regenerates it and fails on a diff.
+
+```bash
+python3 tools/make-llms-full.py
+```
+
+`llms.txt` is the short overview and *is* hand-written. It carries the
+positioning — why someone picks this over other tools, and who it is not for —
+because that is the question models get asked and cannot infer from a command
+reference.
+
+## Launch assets
+
+`launch/` holds the Product Hunt kit and is excluded from deploys, so the slides
+are not reachable as bare URLs on the site. The images are generated from the
+same captured demo data as the page:
+
+```bash
+python3 tools/make-gallery.py     # needs Chrome or Chromium
+```
+
+Five 1270×760 slides plus a 240×240 thumbnail. Because they are drawn from
+`demo-data.js`, a launch image cannot show output the CLI does not produce —
+same guarantee as the page itself.
 
 ## Local preview
 

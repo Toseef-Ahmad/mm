@@ -1,0 +1,513 @@
+# mm — full documentation (plain text)
+
+Source: https://mm.tafil.app/docs
+Repository: https://github.com/Toseef-Ahmad/mm
+Licence: MIT
+
+mm is a free, open-source command-line to-do list and habit tracker. It shows
+exactly one task at a time, and while a "gate" is open it refuses to offer any
+easier work. Written in Python 3.11+ with zero runtime dependencies. Optional
+two-way sync with Obsidian daily-note checkbox properties.
+
+This file is generated from the documentation page so the two cannot disagree.
+A shorter overview is at https://mm.tafil.app/llms.txt
+
+---
+
+Documentation
+
+The complete manual
+===================
+
+Everything mm does, in the order you will need it. The same content ships with the tool as a man page — run man mm or mm help offline. If something here disagrees with the tool, the tool is right and it is a bug worth reporting.
+
+Install
+=======
+
+mm needs Python 3.11 or newer and nothing else. It has no runtime dependencies — CI starts an interpreter with no site-packages at all and checks that mm still imports, on Python 3.11, 3.12 and 3.13, on Linux and macOS.
+
+With pipx (recommended)
+-----------------------
+
+Keeps mm in its own environment and puts the command on your PATH.
+
+    pipx install git+https://github.com/Toseef-Ahmad/mm.git
+    mm --version
+
+With pip
+--------
+
+    python3 -m pip install --user git+https://github.com/Toseef-Ahmad/mm.git
+
+From a clone
+------------
+
+An editable checkout, plus the mm(1) man page installed into ~/.local/share/man.
+
+    git clone https://github.com/Toseef-Ahmad/mm.git
+    cd mm && ./install.sh
+    man mm
+
+Upgrading
+---------
+
+    pipx upgrade mm          # or, from a clone:
+    git pull && ./install.sh
+
+Upgrades never touch ~/.mm. Your config, streaks and history are separate from the program.
+
+Your first five minutes
+=======================
+
+1. Write a starter config
+-------------------------
+
+    mm init
+
+This writes an annotated ~/.mm/mm.toml. It is the only file you need to understand, and it is yours — mm reads it and never rewrites it behind your back.
+
+2. Describe your day, once
+--------------------------
+
+Open ~/.mm/mm.toml and replace the example habits with two or three things that actually matter. Mark the non-negotiable ones as gates.
+
+    [[habits]]
+    name = "Deep work"
+    description = "one hard problem, no tabs"
+    repeat = 1              # every day
+    position = "queue"
+    gate = true             # nothing else is offered until this closes
+    weight = 9
+    
+    [[habits]]
+    name = "Walk"
+    repeat = 1
+    position = "queue"
+    gate = false            # real, but never urgent
+    weight = 2
+
+Start with fewer gates than feels right. Two is plenty; a day where everything is a gate is a day with no gates.
+
+3. Check it parses
+------------------
+
+    mm rules validate
+
+4. Work
+-------
+
+    mm        # the one thing to do right now
+    mm done   # finished; the next thing appears
+
+There is no step 5. Due habits are queued for you the first time mm runs each day — you never add them by hand.
+
+The daily ritual
+================
+
+Two commands carry the whole day.
+
+mm
+
+Shows the one item to do now and starts its timer. Same as mm next. Use mm peek for the same glance without touching the timer.
+
+mm done
+
+Closes the active item — or mm done 7 to close a specific id — credits any streak, and prints what is next.
+
+Everything else in this manual is either configuration you do once, or an escape hatch for a day that went sideways.
+
+The three containers
+====================
+
+mm holds work in three places and always looks at them in the same order. That order is the entire scheduling algorithm; there is no scoring, no machine learning, and nothing that changes based on the time of day.
+
+1. The interrupt stack — LIFO
+-----------------------------
+
+Genuine urgency only, pushed with mm add -p "prod is down". It preempts everything. When you close it, the stack unwinds and you are returned to the exact item you were on, the way a function returns to its caller. This is the point: an interruption cannot quietly become your new plan.
+
+    mm add -p "prod is down"    # jumps the queue
+    mm                          # → prod is down
+    mm done                     # → back to what you were doing
+
+2. The main queue — FIFO, with gates
+------------------------------------
+
+Default work, in order. This is where habits land and where mm add "task" puts things. While any gate is open, non-gate items here are visible but not offered. See Gates.
+
+3. The quick queue
+------------------
+
+Sub-one-minute trivia, added with mm add -q "reply to Sam". It is never surfaced mid-task, because a 40-second job that interrupts deep work does not cost 40 seconds. You clear it deliberately at a checkpoint:
+
+    mm flush-quick
+
+Gates
+=====
+
+A gate is work you have declared dominant. While one is open, mm will not offer you anything that is not a gate. Blocked items still appear in mm status, greyed out and labelled gate-locked, because a tool that silently hides things is a tool you stop trusting.
+
+      queue  4/12   gate open — only gate items selectable
+         4  Inbox triage  · gate-locked
+      →  1  Deep work — one hard problem, no tabs
+         2  Reading — one chapter, no phone
+         3  Walk — one loop outside  · gate-locked
+
+Note that Inbox triage is first in the list and still not selected. Ordering and selectability are different things: you can put an item at the top of the queue and a gate will still keep the pointer off it.
+
+Gates are a constraint, not a cage
+----------------------------------
+
+mm done <id> closes anything by id, including a gate-locked item, and mm reset --park-gates suspends leftovers. Gates govern what mm offers, not what it permits — a tool that locked you out of your own machine would simply get uninstalled. What the gate buys you is that skipping becomes a deliberate act you have to type, rather than the default result of glancing at a list.
+
+Strict gate and the day boundary
+--------------------------------
+
+With strict_gate = true (the default), mm onboard refuses to seed a new day while yesterday's gates are still open. Park them honestly instead of pretending they happened:
+
+    mm reset --park-gates    # suspend leftovers, keep the history
+    mm reset --drop-gates    # remove them (not archived)
+    mm rules strict off      # if you want the lock gone entirely
+
+Capacity and the backlog
+========================
+
+Each container has a ceiling, so a day cannot grow past the energy you have for it. When the queue is full, what happens next is your choice:
+
+backlog
+
+Park the overflow. It returns automatically when there is room.
+
+reject
+
+Refuse the add outright. Sensible for the interrupt stack.
+
+warn
+
+Accept it, but say so.
+
+    mm capacity                 # show all three limits
+    mm capacity queue 12        # set the queue ceiling
+    mm backlog                  # what is parked
+    mm backlog --promote        # pull items back in now
+
+When you are stuck, or wrong
+============================
+
+mm block "waiting on review"
+
+You cannot proceed. Requeues the item with a reason and moves you on.
+
+mm unblock 7 [--front]
+
+Clear the block. Queue items can jump back to the front.
+
+mm suspend [id]
+
+Park something without pretending it is finished.
+
+mm resume [id] [--all]
+
+Bring parked work back. Most recent first if you omit the id.
+
+mm move 7 queue|stack|quick
+
+Reclassify without losing the id or its history. --front puts it at the head of the queue.
+
+mm undo
+
+Reverse the last change to state. Useful after a mistaken done.
+
+Habits
+======
+
+A habit is anything that comes back: a book, a course, a walk, a review. They are the only object you configure, and they are declared once in ~/.mm/mm.toml. When mm loads and a habit is due, it is injected into the container you chose. You never add it by hand, and it never sits in a list on a day it is not due.
+
+Every field
+-----------
+
+  Field  |  Default  |  What it does
+  name  |  required  |  What you see in the queue, and how you refer to it on the CLI.
+  description  |  empty  |  The clause after the em dash. Use it to define done: "one chapter, no phone".
+  type  |  habit  |  A free-form search tag: book, course, fitness. Filter with mm habit list -t book.
+  repeat  |  1  |  Due every N days. 1 is daily, 3 is every third day.
+  days  |  unset  |  Restrict to weekdays, e.g. "Mon,Wed,Fri".
+  position  |  queue  |  queue, stack or quick — which container it is injected into.
+  gate  |  false  |  Dominant work. While it is open, nothing non-gate is offered.
+  weight  |  1  |  Higher sorts earlier, when no explicit order is set.
+  order  |  unset  |  Explicit queue position; 1 is the front. Overrides weight.
+  enabled  |  1  |  Set to 0 to stop queueing it without deleting the history.
+  archived  |  0  |  Retire it entirely, keeping the record.
+  obsidian  |  slug of name  |  The daily-note property this habit maps to. See Obsidian.
+  tags  |  unset  |  Extra search terms for mm habit find.
+From the command line
+---------------------
+
+Editing the TOML is the normal path, but every field is reachable without it.
+
+    mm habit add "Reading" -t book -r 1 --gate -w 6 -d "one chapter, no phone"
+    mm habit list                 # the schedule, with streaks
+    mm habit list -t book         # filter by type
+    mm habit find walk            # search name, type, tags, description
+    mm habit set Reading gate false
+    mm habit set Reading weight 8
+    mm habit log Reading          # done/missed history
+    mm habit miss Reading         # today did not happen; resets the streak
+    mm habit rm Reading
+
+Ordering the queue
+==================
+
+Two knobs, and they are not the same. weight is a soft sort — higher goes earlier. order is explicit: 1 means front of the queue, and it wins over weight.
+
+    mm habit set Meditation order 1      # pin it to the top
+    mm habit set Meditation order none   # back to weight ordering
+
+Being first in the list is not the same as being selectable. If a gate is open, an order = 1 item that is not itself a gate will sit at the top marked gate-locked while the pointer skips past it. That is working as intended, and the label is there so it is never a mystery.
+
+Streaks and the day rollover
+============================
+
+Streaks are gap-aware. A repeat = 3 habit is never punished for the two days in between when it was not due. A broken streak therefore means you missed something you actually committed to, which is the only version of the number worth having.
+
+When the calendar day turns over, mm does three things on the next run:
+
+  - Drops yesterday's unfinished copies of due habits, so nothing appears twice.
+
+  - Marks those due dates missed, resetting the affected streaks.
+
+  - Queues exactly one fresh copy of everything due today.
+
+Habits completed yesterday keep their streak. Leftover non-habit tasks stay where they are — mm does not throw away work you added yourself.
+
+    mm review     # what happened today: done, missed, gates, streak
+    mm stats      # the longer view
+    mm log 20     # the last 20 events
+
+Books and rotations
+===================
+
+Books are a rotation source for anything you return to across many days: a textbook, a course, a paper. With a page count, mm tracks progress and requires it before a paged gate can be closed. Without one, it behaves as a repeating checklist.
+
+    mm book add "CS302" 640     # title, optional page count
+    mm book daily 2             # how many book units a day picks up
+    mm book progress 3 24       # log 24 pages against book 3
+    mm book list
+    mm book done 3              # finished the course; drop from rotation
+
+For a plain daily checklist, prefer a habit with type = "book". Rotation tracks declared in mm.toml also exist, cycle by calendar day, and require mm onboard plus an entry in onboard.order — a track missing from that list stays silent.
+
+Obsidian: two-way daily-note sync
+=================================
+
+If you already track habits as checkbox properties in an Obsidian daily note, mm reads and writes that same list rather than asking you to keep two. Tick a box in Obsidian and the item leaves your queue with its streak credited. Run mm done and the box gets ticked for you. Untick it and the habit comes back.
+
+Turn it on
+----------
+
+    [obsidian]
+    enabled = true
+    vault = "/Users/you/Documents/Obsidian/MyVault"
+    folder = "20 Journal/Personal"          # where daily notes live
+    template = "80 System/Templates/Daily Journal Template.md"  # optional
+
+Each habit maps to a property named by its obsidian field, or a slug of its name if you leave that out. mm also registers those properties as checkbox types in your vault, so Obsidian renders them as real checkboxes rather than the words true and false.
+
+    ---
+    type: daily
+    reading: true
+    deep_work: false
+    ---
+
+Why it does not fight you
+-------------------------
+
+A property reading false is ambiguous. It might mean you unticked the box, or mm closed the item and has not written the note yet. Guess wrong and mm done appears to undo itself — which is exactly the bug that shaped this design.
+
+So mm keeps a shadow of the values both sides last agreed on in ~/.mm/obsidian.json. Only a value that genuinely changed since the last sync counts as your edit. Your ticks always win, and mm never clobbers a note without reading its current contents first.
+
+Live and background sync
+========================
+
+Sync already runs on every mm, mm status and mm done, so you can ignore this section entirely. If you want the queue to react while you are inside Obsidian:
+
+    mm obsidian sync              # once, now
+    mm obsidian watch             # live, in the foreground, until Ctrl-C
+    mm obsidian autostart on      # background, across logins (macOS)
+    mm obsidian autostart status
+    mm obsidian autostart off
+
+macOS: the system withholds Desktop and Documents from background agents. If your vault is in either, grant Full Disk Access to the Python interpreter that autostart on names. The command refuses to report success until it has actually seen the watcher running, so it will tell you if this is the problem.
+
+Every command
+=============
+
+Bare mm is mm next. Run mm help or man mm for the same reference offline.
+
+Work
+----
+
+  mm · mm next  |  The one thing to do now; starts its timer.
+  mm peek  |  The same glance without starting the timer.
+  mm done [id]  |  Finish and advance.
+  mm add "task"  |  Enqueue. -p pushes an interrupt, -q sends it to the quick queue.
+  mm block [reason]  |  Stuck: requeue with a reason and move on.
+  mm unblock <id> [--front]  |  Clear a block.
+  mm suspend [id]  |  Park without finishing.
+  mm resume [id] [--all]  |  Bring parked work back.
+  mm move <id> queue|stack|quick  |  Reclassify, keeping id and history.
+  mm edit <id> · mm note <id> · mm rm <id>  |  Change the text, attach a note, remove it.
+  mm flush-quick  |  Clear the quick queue at a checkpoint.
+  mm undo  |  Reverse the last change to state.
+The day
+-------
+
+  mm init [--force]  |  Write a starter ~/.mm/mm.toml.
+  mm onboard  |  Seed today from config, once per day. -n overrides the rotation count, --force seeds despite leftover gates, --again re-seeds.
+  mm reset  |  Clear today's onboard lock. --park-gates suspends leftovers, --drop-gates removes them.
+  mm start [label] · mm stop  |  Time a session by hand.
+Looking at it
+-------------
+
+  mm status  |  All three containers, with gate state.
+  mm review · mm stats  |  Today in numbers; the longer view.
+  mm session  |  The current timer.
+  mm log [n]  |  Recent events.
+  mm archive [today]  |  What has been closed.
+  mm find <query>  |  Search open work.
+  mm export [json|md|csv]  |  Everything, in a format you can keep.
+Rules, capacity, habits, Obsidian, books
+----------------------------------------
+
+  mm rules show|validate  |  Today's compiled plan; check the config parses.
+  mm rules strict on|off  |  The leftover-gate lock.
+  mm capacity [container] [max]  |  Show or set a ceiling.
+  mm backlog [--promote]  |  What overflowed, and pull it back.
+  mm habit add|set|list|find|log|miss|rm  |  Manage repeating items. See Habits.
+  mm obsidian sync|watch|autostart  |  Daily-note sync. See Obsidian.
+  mm book add|progress|done|list|daily|sync|rm  |  The rotation source. See Books.
+  mm help · mm --version  |  The manual; the version.
+mm.toml reference
+=================
+
+One file, at ~/.mm/mm.toml. You own it. Everything else under ~/.mm is mm's memory and should not be hand-edited.
+
+    version = 3
+    
+    [onboard]
+    strict_gate = true          # refuse a new day while old gates are open
+    order = []                  # which named tracks onboard, in order
+    
+    [capacity.queue]
+    max = 14
+    on_full = "backlog"         # backlog | reject | warn
+    
+    [capacity.stack]
+    max = 5
+    on_full = "reject"
+    
+    [capacity.quick]
+    max = 50
+    on_full = "warn"
+    
+    [rewards]
+    daily = "The rest of the evening is yours."   # printed when all gates close
+    
+    [obsidian]                  # optional; omit to disable entirely
+    enabled = true
+    vault = "/path/to/vault"
+    folder = "20 Journal/Personal"
+    template = "80 System/Templates/Daily Journal Template.md"
+    
+    [[habits]]                 # repeat this block per habit
+    name = "CS302"
+    type = "book"
+    repeat = 1
+    position = "queue"
+    gate = true
+    weight = 10
+    obsidian = "cs302"
+
+Legacy ~/.mm/mm.rules.json still loads if no TOML exists. When both are present, TOML wins.
+
+Files and environment
+=====================
+
+  Path  |  Owner  |  Contents
+  ~/.mm/mm.toml  |  You  |  The schedule: habits, capacity, rewards, Obsidian.
+  ~/.mm/books_config.json  |  You  |  The declared reading list for paged books.
+  ~/.mm/state.json  |  mm  |  Queue, stack, quick, backlog, archive, session.
+  ~/.mm/habits.json  |  mm  |  Streaks, misses, last done, points.
+  ~/.mm/books.json  |  mm  |  Book progress.
+  ~/.mm/obsidian.json  |  mm  |  The shadow of the last agreed sync state.
+Writes are atomic and guarded by an advisory lock, so two terminals cannot corrupt state between them.
+
+Environment variables
+---------------------
+
+MM_HOME
+
+The data directory. Defaults to ~/.mm. Set it to try mm without touching your real setup.
+
+NO_COLOR
+
+Disable colour. Colour is also off automatically when stdout is not a terminal.
+
+MM_STATE, MM_HABITS, MM_BOOKS, MM_BOOKS_CONFIG, MM_RULES
+
+Override individual file paths.
+
+    MM_HOME=$(mktemp -d) mm init && MM_HOME=... mm status   # a throwaway sandbox
+
+Troubleshooting
+===============
+
+mm shows nothing and says "no config yet"
+-----------------------------------------
+
+Run mm init. mm will not invent a schedule for you.
+
+The pointer skips the item at the top of my queue
+-------------------------------------------------
+
+A gate is open. Look for gate-locked on that line — it is ordered first but not selectable. Close the gate, or close it explicitly with mm done <id>. See Ordering.
+
+Ticking a box in Obsidian does nothing
+--------------------------------------
+
+Check three things: enabled = true in the [obsidian] block; that vault and folder point at the folder holding today's note; and that the property name matches the habit's obsidian field. Then run mm obsidian sync and read what it prints. For instant reaction, use mm obsidian watch.
+
+mm obsidian autostart on reports that it could not start
+--------------------------------------------------------
+
+On macOS this is nearly always Full Disk Access. Background agents cannot read ~/Desktop or ~/Documents without it. Grant it to the interpreter path the command printed, then run it again.
+
+I closed the wrong thing
+------------------------
+
+mm undo. It reverses the last change to state, including a done.
+
+Duplicate habits in the queue
+-----------------------------
+
+This was a real bug and is fixed: mm now collapses duplicates and drops stale copies at the day boundary. If you can still reproduce it on the latest version, that is worth an issue with your mm export output.
+
+Is my data going anywhere?
+--------------------------
+
+No. There is no network code in the tool. Everything is plain JSON and TOML under ~/.mm, and the whole program is about 5,000 lines of MIT-licensed Python you can read.
+
+Uninstall
+=========
+
+    pipx uninstall mm
+    rm -rf ~/.mm              # only if you want the history gone too
+
+If you used ./install.sh, remove ~/bin/mm and ~/.local/share/man/man1/mm.1. Nothing else is written anywhere on your system, and there is no account to close.
+
+Still stuck?
+------------
+
+Open an issue with mm --version, your OS, and the command you ran. If it involves habits or Obsidian, mm export and the relevant part of ~/.mm/habits.json make the difference between a guess and a fix — redact freely, the schema matters more than your task names.
+
+Open an issue Read the source

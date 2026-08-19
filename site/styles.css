@@ -131,7 +131,11 @@ header.nav { position: sticky; top: 14px; z-index: 50; padding-top: 14px; }
 
 /* ---------- hero ---------- */
 
-.hero { padding: clamp(56px, 9vw, 104px) 0 0; text-align: center; }
+.hero { padding: clamp(46px, 8vw, 92px) 0 0; text-align: center; }
+.kicker {
+  font: 500 12px/1.5 var(--mono); color: var(--faint);
+  letter-spacing: 0.06em; margin-bottom: 22px;
+}
 .hero h1 .never { color: var(--accent); }
 .hero .lede { max-width: 60ch; margin: 22px auto 0; }
 .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-items: center; margin-top: 34px; }
@@ -252,8 +256,11 @@ section { padding-block: var(--gap); }
 .grid > *, .install-grid > *, .steps li, .steps li > * { min-width: 0; }
 
 .grid { display: grid; gap: 16px; margin-top: 44px; }
-.grid-3 { grid-template-columns: repeat(auto-fit, minmax(292px, 1fr)); }
-.grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.grid-3 { grid-template-columns: repeat(auto-fit, minmax(min(292px, 100%), 1fr)); }
+.grid-2 { grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
+/* Exactly two columns on desktop — for sets of four, where auto-fit would
+   otherwise produce three and leave an orphan. */
+.grid-pair { grid-template-columns: repeat(auto-fit, minmax(min(430px, 100%), 1fr)); }
 
 .card {
   background: var(--surface); border: 1px solid var(--line);
@@ -280,6 +287,35 @@ section { padding-block: var(--gap); }
 .snippet .g { color: var(--good); }
 .snippet .w { color: var(--warn); }
 .snippet + p, p + .snippet { margin-top: 14px; }
+
+/* comparison table */
+.table-wrap { margin-top: 40px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.cmp {
+  width: 100%; min-width: 660px; border-collapse: collapse;
+  font-size: 14.3px; text-align: left;
+}
+.cmp caption {
+  caption-side: bottom; padding-top: 16px;
+  color: var(--faint); font-size: 13px; text-align: left;
+}
+.cmp th, .cmp td { padding: 15px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.cmp thead th {
+  font: 600 14px/1.35 var(--sans); color: var(--text);
+  border-bottom-color: var(--line-strong);
+}
+.cmp thead th:first-child { width: 20%; }
+.cmp .th-eg { display: block; font: 400 11.5px/1.4 var(--mono); color: var(--faint); margin-top: 5px; }
+.cmp tbody th { font: 500 14px/1.45 var(--sans); color: var(--muted); }
+.cmp td { color: var(--muted); }
+.cmp td.yes { color: var(--text); background: rgba(103, 232, 249, 0.055); }
+.cmp tbody tr:last-child th, .cmp tbody tr:last-child td { border-bottom: 0; }
+
+/* who it is for */
+.card ul { margin: 0; padding-left: 19px; color: var(--muted); font-size: 14.5px; line-height: 1.6; }
+.card li + li { margin-top: 9px; }
+.card.fit-yes { border-color: rgba(110, 231, 135, 0.26); }
+.card.fit-yes .k { color: var(--good); }
+.card.fit-no .k { color: var(--warn); }
 
 /* numbered mechanism list */
 .steps { list-style: none; padding: 0; margin: 44px 0 0; display: grid; gap: 2px; }
@@ -323,10 +359,98 @@ details .body { padding: 0 0 18px; color: var(--muted); font-size: 14.5px; line-
 details .body p + p { margin-top: 10px; }
 
 /* install section */
-.install-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(288px, 1fr)); margin-top: 40px; }
+.install-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(288px, 100%), 1fr)); margin-top: 40px; }
 .install-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
 .install-card h3 { margin-bottom: 6px; }
 .install-card .why { color: var(--faint); font-size: 13.5px; margin-bottom: 16px; }
+
+/* ---------- documentation page ---------- */
+
+.doc-layout {
+  display: grid; grid-template-columns: 232px minmax(0, 1fr);
+  gap: 56px; align-items: start; padding-top: 46px;
+}
+/* Without this a grid child refuses to shrink past its content, and the
+   two-column nav below drags the whole page wider than a phone. */
+.doc-layout > * { min-width: 0; }
+@media (max-width: 900px) { .doc-layout { grid-template-columns: 1fr; gap: 28px; } }
+
+.doc-nav { position: sticky; top: 88px; max-height: calc(100vh - 110px); overflow-y: auto; }
+@media (max-width: 900px) {
+  .doc-nav {
+    position: static; max-height: none;
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px;
+    background: var(--surface);
+  }
+  .doc-nav nav { columns: 2; column-gap: 24px; }
+  .doc-nav-h:first-child { margin-top: 0; }
+}
+@media (max-width: 560px) { .doc-nav nav { columns: 1; } }
+.doc-nav-h {
+  font: 500 11px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--faint); margin: 26px 0 9px;
+}
+.doc-nav-h:first-child { margin-top: 0; }
+.doc-nav a {
+  display: block; padding: 6px 0; font-size: 14px; color: var(--muted);
+  text-decoration: none; line-height: 1.35;
+}
+.doc-nav a:hover { color: var(--accent); }
+
+.doc-main { padding-bottom: 40px; min-width: 0; }
+.doc-title { font-size: clamp(32px, 4.6vw, 46px); margin-bottom: 18px; }
+.doc-main > .lede { margin-bottom: 8px; }
+
+.doc-main h2 {
+  font-size: clamp(23px, 2.9vw, 30px); margin: 68px 0 16px;
+  padding-top: 28px; border-top: 1px solid var(--line); scroll-margin-top: 92px;
+}
+.doc-main h3 {
+  font-size: 16.5px; margin: 32px 0 11px; color: var(--text); scroll-margin-top: 92px;
+}
+.doc-main p { color: var(--muted); font-size: 15px; line-height: 1.7; margin-bottom: 14px; }
+.doc-main p strong, .doc-main li strong { color: var(--text); font-weight: 600; }
+.doc-main a:not(.btn) { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.doc-main ol, .doc-main ul {
+  color: var(--muted); font-size: 15px; line-height: 1.7;
+  padding-left: 22px; margin: 0 0 14px;
+}
+.doc-main li + li { margin-top: 7px; }
+.doc-main .snippet { margin-bottom: 16px; }
+.doc-main .table-wrap { margin: 8px 0 18px; }
+.doc-main .cmp.ref { min-width: 560px; font-size: 14px; }
+.doc-main .cmp.ref th[scope="row"] { color: var(--text); font-weight: 500; width: 30%; }
+.doc-main .cmp.ref code { white-space: nowrap; }
+
+/* definition rows: term on the left, meaning on the right */
+.def {
+  display: grid; grid-template-columns: minmax(150px, 300px) 1fr;
+  gap: 2px 22px; margin: 0 0 18px;
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px;
+  background: var(--surface);
+}
+.def > div { padding: 7px 0; font-size: 14.5px; color: var(--muted); line-height: 1.6; min-width: 0; }
+/* Terms are commands; let a long one wrap rather than run into the meaning. */
+.def > div:nth-child(odd) code { white-space: normal; overflow-wrap: anywhere; }
+.def > div:nth-child(odd) { color: var(--text); }
+@media (max-width: 620px) {
+  .def { grid-template-columns: 1fr; gap: 0; }
+  .def > div:nth-child(odd) { padding-bottom: 2px; }
+  .def > div:nth-child(even) { padding-top: 0; padding-bottom: 16px; }
+}
+
+.callout {
+  border-left: 2px solid var(--accent);
+  background: rgba(103, 232, 249, 0.05);
+  padding: 14px 18px; border-radius: 0 8px 8px 0;
+  margin: 0 0 18px;
+}
+
+.doc-end {
+  margin-top: 68px; padding: 28px; border: 1px solid var(--line);
+  border-radius: var(--radius); background: var(--surface);
+}
+.doc-end h3 { margin-top: 0; }
 
 footer.site {
   border-top: 1px solid var(--line); padding: 40px 0 56px; margin-top: var(--gap);

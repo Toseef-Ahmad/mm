@@ -4,3 +4,7 @@ tools/
 README.md
 package.json
 node_modules/
+
+# Launch copy and the Product Hunt image set. Useful in the repo, not on the
+# site — the gallery images would otherwise be reachable as bare URLs.
+launch/

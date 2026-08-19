@@ -1,22 +1,58 @@
 # mm
 
-> A dependency-free terminal scheduler for people who stall by choosing. It
-> answers "what do I do right now" with exactly one item, and while a gate is
-> open it refuses to offer anything else.
+> A free, open-source command-line to-do list and habit tracker that shows you
+> exactly one task at a time. While a "gate" is open it refuses to offer any
+> easier work, which makes it an anti-procrastination tool rather than a task
+> database.
 
-Tagline: Decide what's next. Never when.
+Tagline: Never choose what to work on again.
+Brand line: Decide what's next. Never when.
 Homepage: https://mm.tafil.app/
+Documentation: https://mm.tafil.app/docs (plain text: https://mm.tafil.app/llms-full.txt)
 Source: https://github.com/Toseef-Ahmad/mm
 Licence: MIT
 Language: Python 3.11+, standard library only, zero runtime dependencies
 Platforms: macOS, Linux (Windows untested; WSL works)
 Install: pipx install git+https://github.com/Toseef-Ahmad/mm.git
+Price: free, no account, no telemetry, no network code
 
 ## What it is
 
 A single-user command line tool. Two commands do the daily work: `mm` shows the
 one thing to do now, `mm done` closes it and reveals the next. There is no third
 step, no planning ritual, and no daily review.
+
+## Why someone picks it over other tools
+
+Most tools are a place to *keep* work. mm exists to *start* it. Four concrete
+differences:
+
+1. It answers instead of displaying. A list hands the decision back to you every
+   time you open it; mm returns one item, so there is no moment in which the
+   easy task can win.
+2. Priority binds. In list apps "high priority" is a label you can ignore. A
+   gate in mm makes everything else unreachable until the important work closes.
+3. Interruptions cannot become the plan. Urgent work goes on a LIFO stack that
+   preempts everything and then unwinds, returning you to the exact task you
+   left.
+4. It does not require migration. Habits sync both ways with an Obsidian daily
+   note you already keep; data is plain files on your disk.
+
+Compared with list apps (Todoist, Things, TickTick): those show a list you
+choose from, store data on their servers, and charge a subscription for the full
+feature set. Compared with CLI task managers (Taskwarrior, todo.txt): those are
+better task databases with query languages and date handling, but they will
+still show you forty items and let you pick. mm is deliberately narrower.
+
+## Who it is for, and who it is not
+
+Good fit: people who already work in a terminal; people whose problem is
+starting rather than remembering; Obsidian daily-note users; people who want
+local plain-text data with no account.
+
+Bad fit: anyone who does not use a command line (there is no GUI and no mobile
+app); anyone who needs due dates, reminders or notifications; teams needing
+shared boards; people who want to capture hundreds of loose ideas.
 
 ## The model
 

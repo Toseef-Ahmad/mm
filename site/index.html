@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>mm — decide what's next, never when</title>
-<meta name="description" content="A dependency-free terminal scheduler for people who stall by choosing. One queue, a real interrupt stack, and gates that make the work you said mattered the only thing on offer. Two-way Obsidian daily-note sync. MIT.">
+<title>mm — the terminal to-do list that shows you one task at a time</title>
+<meta name="description" content="mm is a free, open-source to-do list and habit tracker for the command line. It shows you exactly one task — and refuses to offer the easy ones until the work you said mattered is done. Zero dependencies, two-way Obsidian daily-note sync, MIT.">
 <meta name="theme-color" content="#08090b">
 <link rel="canonical" href="https://mm.tafil.app/">
 
@@ -35,13 +35,90 @@
   "name": "mm",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "macOS, Linux",
-  "description": "A dependency-free terminal scheduler with a queue, an interrupt stack, gates that block procrastination, and two-way Obsidian daily-note sync.",
+  "alternateName": "mm CLI to-do list",
+  "description": "A free, open-source command-line to-do list and habit tracker. It shows exactly one task at a time and uses gates to make easier work unreachable until the work you said mattered is done. Includes an interrupt stack and two-way Obsidian daily-note sync. Zero dependencies.",
   "url": "https://mm.tafil.app/",
+  "downloadUrl": "https://github.com/Toseef-Ahmad/mm",
   "codeRepository": "https://github.com/Toseef-Ahmad/mm",
   "programmingLanguage": "Python",
+  "softwareRequirements": "Python 3.11 or newer",
   "license": "https://opensource.org/licenses/MIT",
   "isAccessibleForFree": true,
+  "featureList": [
+    "Shows exactly one task at a time",
+    "Gates make non-priority work unreachable until priorities close",
+    "LIFO interrupt stack that unwinds back to the preempted task",
+    "Repeating habits declared once in a TOML config",
+    "Gap-aware streaks",
+    "Two-way Obsidian daily-note checkbox sync",
+    "Daily capacity limits with an automatic backlog",
+    "Local plain-text data, no account, no telemetry"
+  ],
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How is this different from Todoist, Things or other to-do apps?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "List apps show you every task and make you choose, which is the moment procrastination happens. mm shows exactly one task. Priority in a list app is a label you can ignore; in mm it is a gate that makes everything else unreachable until the important work is closed. mm is also a command-line tool with no account, no subscription and no cloud storage."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How is this different from Taskwarrior or todo.txt?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Taskwarrior and todo.txt are excellent at storing and querying tasks, but they will happily show you forty items and let you pick. mm shows one, and while a gate is open it refuses to offer the easy alternatives. mm is deliberately smaller in scope: no dates, no recurrence language, no query syntax."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I just override a gate?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. mm done <id> closes anything by id, and mm reset --park-gates suspends leftovers. Gates govern what mm offers, not what it permits. The value is that skipping becomes a deliberate act you have to type, instead of the default outcome of glancing at a list."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I have to use Obsidian?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Obsidian sync is off unless you add an [obsidian] block to your config. mm is complete without it. If you do use it, ticking a habit checkbox in your daily note closes the item in mm, and mm done ticks the box."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens if I miss a day?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "When the calendar day rolls over, mm drops yesterday's unfinished copies, marks those due dates missed, and queues one fresh copy of everything due today. Nothing piles up and nothing is queued twice. Streaks are gap-aware, so a habit that repeats every three days is not punished for the two days it was not due."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is my data going anywhere?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Everything lives in ~/.mm as plain JSON and TOML on your own machine. There is no network code in the tool at all, no account and no telemetry. It is about 5,000 lines of MIT-licensed Python you can read."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it work on Windows?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It is untested on Windows. The core is portable Python and file locking degrades gracefully without fcntl, but CI only covers macOS and Linux, so it is not claimed. WSL works."
+      }
+    }
+  ]
 }
 </script>
 </head>
@@ -55,9 +132,10 @@
       <span class="ver" id="brand-version"></span>
     </a>
     <nav class="nav-links" aria-label="Primary">
+      <a class="hide-sm" href="#why">Why mm</a>
       <a class="hide-sm" href="#how">How it works</a>
       <a class="hide-sm" href="#obsidian">Obsidian</a>
-      <a class="hide-sm" href="#faq">FAQ</a>
+      <a href="/docs">Docs</a>
       <a class="btn btn-ghost" href="https://github.com/Toseef-Ahmad/mm">GitHub</a>
       <a class="btn btn-primary" href="#install">Install</a>
     </nav>
@@ -68,11 +146,12 @@
 
   <!-- ================= hero ================= -->
   <div class="hero wrap">
-    <h1>Decide what's next.<br><span class="never">Never when.</span></h1>
+    <p class="kicker">Open source &middot; runs in your terminal &middot; zero dependencies</p>
+    <h1>Never choose what to<br><span class="never">work on again.</span></h1>
     <p class="lede">
-      A terminal scheduler for people who stall by choosing. One queue, a real
-      interrupt stack, and <strong>gates</strong> that make the work you said
-      mattered the only thing on offer. No clocks, no calendar, no web app.
+      <strong>mm</strong> is a to-do list that shows you exactly <strong>one
+      task</strong> — the one you said mattered. Everything easier stays out of
+      reach until it is done. You still decide when to work; mm decides what.
     </p>
 
     <div class="hero-cta">
@@ -145,6 +224,117 @@
       A gate does not remind you to do the hard thing.<br>
       It makes the easy thing <span class="accent">not an option</span>.
     </blockquote>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ================= why this one ================= -->
+  <section id="why">
+    <div class="wrap sec-head">
+      <p class="eyebrow">Why this one</p>
+      <h2>Other tools store your work. This one starts it.</h2>
+      <p class="lede">
+        If your problem is remembering things, a normal to-do app already solves
+        it. mm is for the other problem: you know exactly what you should be
+        doing, and you open the list anyway and pick something easier.
+      </p>
+    </div>
+
+    <div class="wrap grid grid-pair">
+      <div class="card">
+        <span class="k">01 &middot; It answers, it does not display</span>
+        <p>
+          A list hands the decision back to you every time you look at it. mm
+          returns one item. There is nothing to scan, compare, or reorder, so
+          there is no moment where the easy task can win.
+        </p>
+      </div>
+      <div class="card accent">
+        <span class="k">02 &middot; Priority that actually binds</span>
+        <p>
+          Everywhere else, "high priority" is a red label you are free to
+          ignore. Here it is a <strong>gate</strong>: while one is open, mm will
+          not offer you anything else. You set the constraint yourself, on a
+          calm morning, and it holds at 3pm when you are looking for an excuse.
+        </p>
+      </div>
+      <div class="card">
+        <span class="k">03 &middot; Interruptions cannot become the plan</span>
+        <p>
+          Urgent work goes on a stack that preempts everything, then
+          <em>unwinds</em> — closing it returns you to the exact task you left.
+          In a list app, an interruption just becomes another row and quietly
+          replaces what you were doing.
+        </p>
+      </div>
+      <div class="card">
+        <span class="k">04 &middot; It does not ask you to move in</span>
+        <p>
+          Habits sync both ways with the Obsidian daily note you already keep.
+          No migration, no account, no subscription, no server. Your data is
+          plain text files in a folder you own, and there is no network code in
+          the tool at all.
+        </p>
+      </div>
+    </div>
+
+    <div class="wrap table-wrap">
+      <table class="cmp">
+        <caption>How the approaches differ. All three are good at what they were built for.</caption>
+        <thead>
+          <tr>
+            <th scope="col"></th>
+            <th scope="col">mm</th>
+            <th scope="col">List apps<br><span class="th-eg">Todoist, Things, TickTick</span></th>
+            <th scope="col">CLI task managers<br><span class="th-eg">Taskwarrior, todo.txt</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">What it shows you</th>
+            <td class="yes">Exactly one task</td>
+            <td>A list you choose from</td>
+            <td>A list you query</td>
+          </tr>
+          <tr>
+            <th scope="row">What priority means</th>
+            <td class="yes">A constraint that blocks everything else</td>
+            <td>A label you can ignore</td>
+            <td>A sort key</td>
+          </tr>
+          <tr>
+            <th scope="row">Interruptions</th>
+            <td class="yes">A stack that unwinds back to your task</td>
+            <td>Another row in the list</td>
+            <td>Another row in the list</td>
+          </tr>
+          <tr>
+            <th scope="row">Habits and tasks</th>
+            <td class="yes">The same object, queued automatically</td>
+            <td>A separate feature, or a separate app</td>
+            <td>Recurrence syntax</td>
+          </tr>
+          <tr>
+            <th scope="row">A cap on the day</th>
+            <td class="yes">Capacity limits; overflow parks itself</td>
+            <td>Add as many as you like</td>
+            <td>Add as many as you like</td>
+          </tr>
+          <tr>
+            <th scope="row">Where your data lives</th>
+            <td class="yes">Plain files on your disk</td>
+            <td>Their servers</td>
+            <td>Plain files on your disk</td>
+          </tr>
+          <tr>
+            <th scope="row">Price</th>
+            <td class="yes">Free, MIT, no account</td>
+            <td>Free tier, then a subscription</td>
+            <td>Free, open source</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 
   <hr class="rule">
@@ -287,10 +477,43 @@ type: daily
   <hr class="rule">
 
   <!-- ================= honesty ================= -->
-  <section>
+  <section id="fit">
     <div class="wrap sec-head">
-      <p class="eyebrow">What it is not</p>
-      <h2>A small tool that stays small</h2>
+      <p class="eyebrow">Honest fit</p>
+      <h2>Who it is for — and who it is not</h2>
+      <p class="lede">
+        A tool this opinionated is wrong for plenty of people. Better you find
+        out here than after installing it.
+      </p>
+    </div>
+
+    <div class="wrap grid grid-2">
+      <div class="card fit-yes">
+        <span class="k">Use it if</span>
+        <ul>
+          <li>You already live in a terminal.</li>
+          <li>Your problem is <em>starting</em>, not remembering.</li>
+          <li>You keep an Obsidian daily note and want habits in one place.</li>
+          <li>You want your data as files you can read, with no account.</li>
+          <li>You have a few things that genuinely matter each day, and a pile of
+            small ones that keep eating them.</li>
+        </ul>
+      </div>
+      <div class="card fit-no">
+        <span class="k">Skip it if</span>
+        <ul>
+          <li>You do not use a command line. There is no GUI and no phone app.</li>
+          <li>You need due dates, reminders, or notifications.</li>
+          <li>You work off shared boards with a team.</li>
+          <li>You want to capture a hundred loose ideas — that is a list app's
+            job, and it is good at it.</li>
+          <li>You like choosing what to work on. mm exists to take that away.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="wrap sec-head" style="margin-top:64px">
+      <h2 style="font-size:clamp(22px,2.6vw,28px)">And what it deliberately is not</h2>
     </div>
     <div class="wrap grid grid-3">
       <div class="card">
@@ -378,8 +601,8 @@ mm init &amp;&amp; man mm</pre>
         habits, run <code>mm</code>, and the tool takes it from there.
       </p>
       <div class="hero-cta">
-        <a class="btn btn-primary" href="https://github.com/Toseef-Ahmad/mm">Source on GitHub</a>
-        <a class="btn btn-ghost" href="https://github.com/Toseef-Ahmad/mm/blob/master/README.md">Read the docs</a>
+        <a class="btn btn-primary" href="/docs">Read the documentation</a>
+        <a class="btn btn-ghost" href="https://github.com/Toseef-Ahmad/mm">Source on GitHub</a>
       </div>
     </div>
   </section>
@@ -393,6 +616,22 @@ mm init &amp;&amp; man mm</pre>
       <h2>The honest answers</h2>
     </div>
     <div class="narrow" style="margin-top:34px">
+      <details>
+        <summary>How is this different from Todoist, Things or other to-do apps?</summary>
+        <div class="body">
+          <p>
+            They show you every task and make you choose. That moment of choosing
+            is exactly where the day goes wrong: the easiest item wins, and it is
+            never the one that mattered. mm shows one task.
+          </p>
+          <p>
+            The other difference is what priority means. In a list app it is a red
+            label you are free to ignore. Here it is a gate — while one is open,
+            mm will not offer you anything else, so the decision you made calmly
+            in the morning is the one that holds at 3pm.
+          </p>
+        </div>
+      </details>
       <details>
         <summary>How is this different from Taskwarrior or todo.txt?</summary>
         <div class="body">
@@ -460,7 +699,7 @@ mm init &amp;&amp; man mm</pre>
         </div>
       </details>
       <details>
-        <summary>Windows?</summary>
+        <summary>Does it work on Windows?</summary>
         <div class="body">
           <p>
             Untested. The core is portable Python and file locking degrades
@@ -479,6 +718,7 @@ mm init &amp;&amp; man mm</pre>
     <span class="fb"><span class="caret">&rarr;</span> mm</span>
     <span class="foot-note" style="margin:0">Decide what's next. Never when.</span>
     <nav class="foot-links" aria-label="Footer">
+      <a href="/docs">Docs</a>
       <a href="https://github.com/Toseef-Ahmad/mm">GitHub</a>
       <a href="https://github.com/Toseef-Ahmad/mm/blob/master/CHANGELOG.md">Changelog</a>
       <a href="https://github.com/Toseef-Ahmad/mm/blob/master/CONTRIBUTING.md">Contributing</a>

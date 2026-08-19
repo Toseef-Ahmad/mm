@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>mm — launch gallery slides</title>
+<!--
+  Renders 1270x760 Product Hunt gallery slides from the same captured demo data
+  the website uses, so a launch image can never show output the tool does not
+  actually produce. Drive it with site/tools/make-gallery.py, or open
+  gallery.html#2 in a browser to look at one.
+-->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #08090b; --surface: #0e1013; --line: #1e2229;
+    --text: #f2f4f7; --muted: #a8b0bd; --faint: #6b7482;
+    --accent: #67e8f9; --good: #6ee787; --warn: #f0c674;
+    --sans: "Inter", -apple-system, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #000; font-family: var(--sans); }
+
+  .slide {
+    width: 1270px; height: 760px; background: var(--bg); color: var(--text);
+    padding: 62px 68px; display: flex; flex-direction: column; overflow: hidden;
+    position: relative;
+  }
+  /* a soft cyan wash so the frames do not read as flat black rectangles */
+  .slide::before {
+    content: ""; position: absolute; inset: -30% 40% 55% -10%;
+    background: radial-gradient(closest-side, rgba(103,232,249,0.10), transparent 70%);
+    pointer-events: none;
+  }
+  .slide > * { position: relative; }
+
+  .mark {
+    font: 500 15px/1 var(--mono); color: var(--faint);
+    display: flex; align-items: center; gap: 9px; margin-bottom: 30px;
+  }
+  .mark b { color: var(--text); font-weight: 600; letter-spacing: -0.01em; }
+  .mark .caret { color: var(--accent); }
+  .mark .url { margin-left: auto; font-size: 13.5px; }
+
+  .eyebrow {
+    font: 500 12px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 16px;
+  }
+  h1 {
+    font-size: 44px; line-height: 1.1; letter-spacing: -0.028em;
+    font-weight: 600; margin-bottom: 14px; max-width: 22ch;
+  }
+  h1 .hl { color: var(--accent); }
+  .sub { font-size: 19px; line-height: 1.5; color: var(--muted); max-width: 62ch; }
+
+  /* terminal */
+  .term {
+    margin-top: 30px; flex: 1; min-height: 0;
+    border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+    display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+  }
+  .term-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 11px 16px; border-bottom: 1px solid var(--line); background: #0b0d10;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .term-bar .t { margin-left: 10px; font: 400 12.5px/1 var(--mono); color: var(--faint); }
+  .term-bar .live { margin-left: auto; font: 400 12px/1 var(--mono); color: var(--good); }
+  .term-body {
+    padding: 20px 24px; font: 400 14px/1.62 var(--mono);
+    white-space: pre-wrap; overflow: hidden; color: var(--text);
+  }
+  .term-body i { font-style: normal; }
+  .cmd { color: var(--text); }
+  .cmd .p { color: var(--accent); margin-right: 8px; }
+  .out { display: block; margin-bottom: 16px; }
+  .out:last-child { margin-bottom: 0; }
+  .note {
+    margin-top: 2px; color: var(--faint); font: 400 13px/1.5 var(--sans);
+  }
+
+  /* ansi classes, same names capture.py emits */
+  .c-dim { color: var(--faint); }
+  .c-red { color: #ff7b72; } .c-green { color: var(--good); }
+  .c-yellow { color: var(--warn); } .c-blue { color: #79c0ff; }
+  .c-magenta { color: #d2a8ff; } .c-cyan { color: var(--accent); }
+  .c-bold { font-weight: 600; }
+
+  /* Obsidian slide: the note on the left, mm's reaction on the right */
+  .split { display: flex; align-items: center; gap: 26px; flex: 1; min-height: 0; margin-top: 26px; }
+  .split .notecard { width: 340px; flex: none; }
+  .split .term { margin-top: 0; flex: 1; align-self: stretch; }
+  .nc-bar { font: 400 12px/1.4 var(--mono); color: var(--faint); margin-bottom: 8px; }
+  .nc-body {
+    border: 1px solid var(--line); border-left: 2px solid var(--good);
+    border-radius: 8px; background: #0b0d10; padding: 16px 18px;
+    font: 400 13.5px/1.65 var(--mono); white-space: pre-wrap; color: var(--muted);
+  }
+  .nc-arrow {
+    font: 500 22px/1 var(--mono); color: var(--accent); flex: none;
+  }
+
+  /* closing slide */
+  .cta { display: flex; flex-direction: column; justify-content: center; flex: 1; }
+  .facts { display: flex; gap: 40px; margin-top: 34px; flex-wrap: wrap; }
+  .fact .n { font: 600 30px/1 var(--sans); letter-spacing: -0.02em; }
+  .fact .l { font: 400 13.5px/1 var(--mono); color: var(--faint); margin-top: 10px; }
+  .installbox {
+    margin-top: 36px; display: inline-flex; align-self: flex-start; gap: 12px;
+    border: 1px solid var(--line); background: var(--surface);
+    border-radius: 10px; padding: 17px 22px; font: 400 16px/1 var(--mono);
+  }
+  .installbox .p { color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="../demo-data.js"></script>
+<script>
+const D = window.MM_DEMO;
+const scen = k => D.scenarios.find(s => s.key === k);
+const frames = (k, idx) => idx.map(i => scen(k).frames[i]);
+
+const SLIDES = [
+  {
+    eyebrow: "A to-do list for your terminal",
+    title: 'Never choose what to <span class="hl">work on again.</span>',
+    sub: "mm shows you exactly one task — the one you said mattered. Two commands carry the whole day.",
+    title_bar: "mm — the ritual",
+    frames: frames("ritual", [1, 2, 3])
+  },
+  {
+    eyebrow: "Gates",
+    title: 'Priority that <span class="hl">actually binds.</span>',
+    sub: "While a gate is open, mm will not offer you anything else. The easy task is still visible — it is just not on the menu.",
+    title_bar: "mm — gates",
+    frames: frames("gates", [0])
+  },
+  {
+    eyebrow: "The interrupt stack",
+    title: 'Interruptions cannot <span class="hl">become the plan.</span>',
+    sub: "Urgent work preempts everything, then unwinds like a call stack — returning you to the exact task you left.",
+    title_bar: "mm — interrupts",
+    frames: frames("interrupt", [0, 1, 2, 3])
+  },
+  {
+    eyebrow: "Obsidian &middot; two-way sync",
+    title: 'It shares the note <span class="hl">you already keep.</span>',
+    sub: "Tick the box in Obsidian; mm notices within a second.",
+    note_card: {
+      title: "2026-08-19.md &mdash; your Obsidian daily note",
+      lines: ['<span class="c-dim">---</span>', "type: daily",
+              '<span class="c-green">reading: true</span>',
+              '<span class="c-dim">deep_work: false</span>',
+              '<span class="c-dim">walk: false</span>',
+              '<span class="c-dim">---</span>']
+    },
+    title_bar: "mm — obsidian sync",
+    frames: frames("obsidian", [3])
+  },
+  {
+    eyebrow: "Free and open source",
+    title: 'Your data is a folder <span class="hl">on your own disk.</span>',
+    sub: "No account, no subscription, no server, no telemetry. Around 5,000 lines of MIT-licensed Python with zero runtime dependencies.",
+    cta: true
+  }
+];
+
+function termHTML(s) {
+  const body = s.frames.map(f => `<span class="out"><span class="cmd"><span class="p">$</span>${f.cmd}</span>
+${f.out}</span>`).join("");
+  return `<div class="term">
+    <div class="term-bar">
+      <span class="dot" style="background:#ff5f57"></span>
+      <span class="dot" style="background:#febc2e"></span>
+      <span class="dot" style="background:#28c840"></span>
+      <span class="t">${s.title_bar}</span>
+      <span class="live">real output</span>
+    </div>
+    <div class="term-body">${body}</div>
+  </div>`;
+}
+
+function ctaHTML() {
+  return `<div class="cta">
+    <div class="facts">
+      <div class="fact"><div class="n">0</div><div class="l">dependencies</div></div>
+      <div class="fact"><div class="n">MIT</div><div class="l">licensed</div></div>
+      <div class="fact"><div class="n">~/.mm</div><div class="l">is where it all lives</div></div>
+      <div class="fact"><div class="n">2</div><div class="l">commands a day</div></div>
+    </div>
+    <div class="installbox"><span class="p">$</span>pipx install git+https://github.com/Toseef-Ahmad/mm.git</div>
+  </div>`;
+}
+
+function noteHTML(n) {
+  return `<div class="notecard">
+    <div class="nc-bar">${n.title}</div>
+    <div class="nc-body">${n.lines.join("\n")}</div>
+  </div>`;
+}
+
+function render(i) {
+  const s = SLIDES[i];
+  document.getElementById("root").innerHTML = `<div class="slide">
+    <div class="mark"><span class="caret">&rarr;</span><b>mm</b>
+      <span class="url">mm.tafil.app</span></div>
+    <p class="eyebrow">${s.eyebrow}</p>
+    <h1>${s.title}</h1>
+    <p class="sub">${s.sub}</p>
+    ${s.note_card
+        ? `<div class="split">${noteHTML(s.note_card)}
+             <span class="nc-arrow">&rarr;</span>${termHTML(s)}</div>`
+        : (s.cta ? ctaHTML() : termHTML(s))}
+  </div>`;
+}
+
+render(Math.max(0, Math.min(SLIDES.length - 1, parseInt(location.hash.slice(1) || "0", 10))));
+window.addEventListener("hashchange", () =>
+  render(parseInt(location.hash.slice(1) || "0", 10)));
+window.MM_SLIDE_COUNT = SLIDES.length;
+</script>
+</body>
+</html>

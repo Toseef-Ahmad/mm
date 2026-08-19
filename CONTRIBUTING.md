@@ -45,8 +45,11 @@ its own.
   `--help` strings in `mm/cli.py`.
 - If you change what the CLI prints, re-record the landing page demo with
   `python3 site/tools/capture.py` and commit the result. The page shows real
-  captured output, so stale frames are a lie about the tool. `site/llms.txt` is
-  the other place behaviour is described in prose.
+  captured output, so stale frames are a lie about the tool.
+- If you change behaviour, `site/docs.html` is the fourth place that must agree,
+  then run `python3 site/tools/make-llms-full.py` — CI fails on a stale
+  `llms-full.txt`. `site/llms.txt` is hand-written and carries the positioning;
+  update it when what the tool *is* changes, not on every behaviour tweak.
 
 ## Cutting a release (maintainers)
 
@@ -54,7 +57,14 @@ its own.
    lives; the build reads it and release CI refuses a tag that disagrees.
 2. Re-record the landing page demo — `python3 site/tools/capture.py` — and commit
    it. The recording carries the version the site displays, so CI fails the
-   bump until it is refreshed. Then `cd site && vercel --prod --yes`.
+   bump until it is refreshed. Refresh the generated docs and, if the copy or
+   demo moved, the launch images:
+
+   ```bash
+   python3 site/tools/make-llms-full.py
+   python3 site/tools/make-gallery.py   # only before a launch
+   cd site && vercel --prod --yes
+   ```
 3. Add the section to `CHANGELOG.md`.
 4. Tag and push: `git tag -a vX.Y.Z -m "…" && git push origin vX.Y.Z`.
 5. `gh release create vX.Y.Z --notes-file …`

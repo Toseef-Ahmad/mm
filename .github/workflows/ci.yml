@@ -55,6 +55,19 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
         run: python3 site/tools/capture.py --check
 
+      - name: Plain-text docs are in step with the docs page
+        # llms-full.txt is what AI crawlers read. It is generated from docs.html,
+        # so a hand-edit of one and not the other would quietly ship two
+        # different manuals.
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
+        shell: bash
+        run: |
+          python3 site/tools/make-llms-full.py
+          git diff --exit-code -- site/llms-full.txt || {
+            echo "::error::site/llms-full.txt is stale — run python3 site/tools/make-llms-full.py"
+            exit 1
+          }
+
       - name: Manual and starter config ship in the wheel
         shell: bash
         run: |
