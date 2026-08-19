@@ -1,0 +1,418 @@
+.TH MM 1 "August 2026" "mm 2.0.0" "User Commands"
+.SH NAME
+mm \- decide what's next, never when
+.SH SYNOPSIS
+.B mm
+[\fIcommand\fR] [\fIarguments\fR]
+.br
+.B man mm
+.SH DESCRIPTION
+.B mm
+is a personal CLI scheduler.
+It answers
+.I what to do right now
+and never
+.IR when .
+There are no clocks and no calendar UI.
+.PP
+The daily ritual is:
+.PP
+.RS
+.B mm onboard
+.br
+.B mm
+.br
+.B mm done
+.RE
+.PP
+Bare
+.B mm
+is the same as
+.BR "mm next" .
+.SH MODEL
+Three containers, in precedence order:
+.TP
+.B interrupt stack
+LIFO. Real urgency only
+.RB ( "mm add \-p" ).
+Preempts everything, then unwinds like a call stack.
+.TP
+.B main queue
+FIFO. Default work. While any
+.B gate
+item is open, non-gate work is unreachable.
+.TP
+.B quick queue
+Sub-1-minute trivia
+.RB ( "mm add \-q" ).
+Never auto-surfaced mid-task. Flush with
+.BR "mm flush-quick" .
+.PP
+A
+.B gate
+is dominant work.
+With
+.B strict_gate
+on (the default),
+.B mm onboard
+refuses a new day while leftover gates still sit in the queue.
+Park them honestly with
+.B mm suspend
+or
+.BR "mm reset \-\-park-gates" .
+.B mm reset
+alone only clears the onboard lock. It does not freeze the queue.
+.SH COMMANDS
+.SS Work
+.TP
+.B mm
+.TQ
+.B mm next
+Show the active item and start its timer.
+.TP
+.B mm peek
+Same glance, no timer.
+.TP
+.BI "mm done" " [id]"
+Finish the active item (or that id) and advance.
+.TP
+.BI "mm add" " task"
+Enqueue.
+.B \-p
+pushes an interrupt.
+.B \-q
+goes to the quick queue.
+.TP
+.BI "mm block" " [reason]"
+Stuck: requeue and move on.
+.TP
+.BI "mm unblock " id " [\-\-front]"
+Clear a block. Queue items can jump to the front.
+.TP
+.BI "mm suspend" " [id]"
+Park without finishing.
+.TP
+.BI "mm resume" " [id]"
+Bring one item back. Most recent if omitted.
+.B \-\-all
+restores every parked item.
+.TP
+.BI "mm move " id " queue|stack|quick [\-\-front]"
+Reclassify, keep id and history.
+.SS Day
+.TP
+.B mm onboard
+Seed today's queue from config. Once per day.
+.B \-n
+overrides today's rotation count.
+.B \-\-force
+seeds even with leftover gates.
+.B \-\-again
+re-seeds today.
+.TP
+.B mm reset
+Clear today's onboard lock. Queue stays put.
+.B \-\-park-gates
+suspends leftover gates.
+.B \-\-drop-gates
+removes them (not archived).
+.TP
+.B mm init
+Write a starter
+.IR ~/.mm/mm.toml .
+.B \-\-force
+overwrites.
+.SS Habits
+Repeating items. A book, a walk, a course \- same object.
+Declared in
+.I ~/.mm/mm.toml
+as
+.BR [[habits]] .
+Due items are injected into
+.BR queue ,
+.BR stack ,
+or
+.B quick
+when mm loads. Gap days on
+.B repeat > 1
+do not break the streak. A missed
+.I due
+day is marked missed.
+.PP
+When the day rolls over, today's due items sit at the front of the queue
+(gates, then normals, by weight). Yesterday leftovers stay behind them
+and are not marked missed while still open. Closing a leftover credits
+that due date only.
+.TP
+.BI "mm habit add " name
+.B \-t
+type tag.
+.B \-r
+repeat days.
+.B \-p
+queue|stack|quick.
+.B \-\-gate
+.B \-w
+weight.
+.B \-\-order
+1 = front of the queue;
+.B "mm habit set " name " order none"
+returns it to weight ordering.
+.TP
+.BI "mm habit set " name " field value"
+Change
+.BR position ,
+.BR repeat ,
+.BR enabled ,
+.BR archived ,
+.BR type ,
+.BR gate ,
+.BR weight ,
+.BR description ,
+.BR days .
+.TP
+.B mm habit list [\-t type] [query]
+.TQ
+.BI "mm habit find " query
+Search name, type, tags, description.
+.TP
+.BI "mm habit log " "[name]"
+Done / missed history and streak.
+.TP
+.BI "mm habit miss " name
+Today did not happen. Streak resets. Open item dropped.
+.TP
+.BI "mm habit rm " name
+.SS Obsidian
+Bidirectional sync with today's daily note. Boolean properties match
+.B obsidian
+on each habit (or a slug of the name). Toggle in Obsidian or
+.B mm done
+— both sides update.
+.B energy
+is not a habit.
+.TP
+.B mm obsidian sync
+Pull done-toggles, inject dues, push MM history. Also runs on
+.B mm next
+when
+.B [obsidian]
+is enabled in
+.IR mm.toml .
+Only a box that changed since the last sync counts as your edit;
+.I ~/.mm/obsidian.json
+holds the values both sides last agreed on, so closing an item in mm is
+never mistaken for an uncheck.
+.TP
+.B mm obsidian watch
+Poll today's note and sync within a second. Runs until Ctrl\-C.
+.TP
+.BR "mm obsidian autostart " on | off | status
+Keep the watcher alive in the background across logins (macOS launchd).
+macOS withholds Desktop and Documents from background agents, so grant the
+interpreter it names Full Disk Access; the command refuses to report success
+until it has seen the watcher running.
+.SS Books
+Books are a rotation source: courses, papers, anything you return to.
+Omit the page count for a repeating daily checklist. Daily checklists are usually habits with
+.B type = book
+.
+.TP
+.BI "mm book add " title " [pages]"
+Add one. Trailing integer is pages.
+.B \-g
+groups titles so they onboard together.
+.TP
+.BI "mm book progress " id " pages"
+Log pages read. Required the same day to
+.B mm done
+a page-tracked book gate. Checklist books (pages 0) close with
+.B mm done
+and stay in rotation until
+.BR "mm book done" .
+.TP
+.BI "mm book done " id
+Drop it from rotation (finished the course).
+.TP
+.BI "mm book daily " N
+How many book units onboard picks each day.
+.TP
+.B mm book list
+.TQ
+.BI "mm book rm " id
+.TQ
+.B mm book sync
+Reconcile
+.IR ~/.mm/books_config.json
+into tracked state.
+.B \-\-prune
+drops titles no longer in that file.
+.SS Inspect
+.TP
+.B mm status
+.TQ
+.B mm stats
+.TQ
+.B mm review
+.TQ
+.B mm session
+.TQ
+.B mm archive [today]
+.TQ
+.B mm log [n]
+.TQ
+.B mm export [json|md|csv]
+.TP
+.B mm rules show
+Today's compiled plan, no writes.
+.TP
+.B mm rules validate
+.TQ
+.B mm rules strict on|off
+Leftover-gate lock.
+.TP
+.B mm capacity [queue|stack|quick] [max]
+.TQ
+.B mm backlog [\-\-promote]
+.TP
+.B mm start [label]
+.TQ
+.B mm stop
+.TP
+.B mm undo
+.TQ
+.B mm find query
+.TQ
+.B mm help
+This manual
+.RB ( man\ mm ).
+.SH CONFIGURATION
+You edit two files. Everything else is mm's memory. Do not hand-edit it.
+.PP
+.I ~/.mm/mm.toml
+is the schedule:
+.BR [[habits]] ,
+optional tracks, onboard, gates, capacity, rewards, and
+.B [obsidian]
+(vault path + daily folder).
+If it is absent,
+.I ~/.mm/mm.rules.json
+is used (old format). If both exist, TOML wins.
+.PP
+Habits auto-queue when due. Tracks still need
+.B mm onboard
+and an
+.B onboard.order
+entry \- a track missing from
+.B order
+is silent.
+.PP
+Track types:
+.TP
+.B rotation
+Cycling window over a list. Does not freeze on the first items.
+Checklist books and plain
+.B items
+rotate by calendar day.
+Named
+.B books
+(or
+.B source = books )
+reads the book tracker.
+.TP
+.B weekday
+Mon–Sun table. Empty string is a rest day.
+Use this for weekend-only study (business, economy) so those titles
+do not leak onto a Tuesday.
+.TP
+.B static
+.TQ
+.B list
+Same items every day.
+.PP
+.B dominant = true
+makes the track a gate.
+.B position
+is
+.BR gate ,
+.BR front ,
+or
+.BR back .
+.PP
+Annotated example:
+.I mm/data/mm.toml
+in the source tree; it is also what
+.B mm init
+writes.
+.SH FILES
+.TP
+.I ~/.mm/mm.toml
+Schedule, including
+.BR [[habits]] .
+You edit this.
+.TP
+.I ~/.mm/habits.json
+Habit streaks, missed, last done. Owned by mm.
+.TP
+.I ~/.mm/books_config.json
+Declared reading list (paged books). You edit this.
+.TP
+.I ~/.mm/state.json
+Queue, stack, quick, backlog, archive, session. Owned by mm.
+.TP
+.I ~/.mm/books.json
+Book progress. Owned by mm.
+.TP
+.I ~/.mm/mm.rules.json
+Legacy schedule. Ignored when
+.I mm.toml
+exists.
+.SH ENVIRONMENT
+.TP
+.B MM_HOME
+Data directory. Default
+.IR ~/.mm .
+.TP
+.B MM_STATE
+.TQ
+.B MM_BOOKS
+.TQ
+.B MM_BOOKS_CONFIG
+.TQ
+.B MM_HABITS
+.TQ
+.B MM_RULES
+Override individual files.
+.TP
+.B NO_COLOR
+Disable colour. Also disabled when stdout is not a terminal.
+.SH EXAMPLES
+.nf
+mm init
+mm book add "PSY101"
+mm book add "CS302"
+mm book add "Thinking Mathematically"
+mm book daily 2
+mm rules validate
+mm onboard
+mm
+mm done
+.fi
+.PP
+Two books a day, cycling the whole list — not stuck at the top.
+Weekend extras belong in a
+.B weekday
+track, not in the same book list.
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 1
+Invalid config
+.RB ( "mm rules validate" )
+or argparse error.
+.SH SEE ALSO
+.BR python (1)
+.PP
+https://github.com/Toseef-Ahmad/mm

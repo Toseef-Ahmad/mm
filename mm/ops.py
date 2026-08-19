@@ -11,6 +11,7 @@ from .config import (
     capacity_for, capacity_policy, compile_rules, default_capacity,
     load_rules, promote_backlog, save_rules, validate_rules,
 )
+from .habits import ensure_due_habits, load_declared, load_progress, record_done, slot_for
 from .model import (
     book_gate_ready, elapsed_str, find_active, find_item, fmt_line, gate_progress_today,
     has_open_gate, is_gate_item, item_tag, leading_gate_count, mark_active,
@@ -66,7 +67,29 @@ def cmd_add(state, args):
         print(f"  {good('+')} queued  {dim(str(item['id']))}  {text}")
 
 
+def _ensure_habits(state, quiet=True):
+    from .obsidian import apply_obsidian
+    ob = apply_obsidian(state, phase="before")
+    added, backlogged, skipped, missed = ensure_due_habits(state, quiet=quiet)
+    apply_obsidian(state, phase="after")
+    if ob.get("pulled"):
+        print(dim("  obsidian done: " + ", ".join(ob["pulled"][:8])))
+    if ob.get("undone"):
+        print(dim("  obsidian reopened: " + ", ".join(ob["undone"][:8])))
+    if ob.get("added_habits"):
+        print(dim("  obsidian +habit: " + ", ".join(ob["added_habits"][:8])))
+    if missed:
+        print(dim(f"  missed {len(missed)} habit due-day(s): " +
+                  ", ".join(f"{n}@{d}" for n, d in missed[:8])))
+    if added:
+        print(dim(f"  {len(added)} habit(s) due → queued"))
+    if backlogged:
+        print(dim(f"  {len(backlogged)} habit(s) over capacity → backlog"))
+    return added, backlogged, skipped, missed
+
+
 def cmd_next(state, _args):
+    _ensure_habits(state)
     for it in promote_backlog(state, load_rules()):
         print(dim(f"  ↑ promoted from backlog  {it['id']}  {it['text']}"))
     kind, _idx, item = find_active(state)
@@ -80,6 +103,10 @@ def cmd_next(state, _args):
         stuck_n = sum(1 for it in state["stack"] + state["queue"] if it.get("blocked") or it.get("suspended"))
         if stuck_n:
             print(f"\n  {dim('nothing active —')} {stuck_n} blocked/suspended {dim('(mm status)')}\n")
+        elif P.rules_kind is None:
+            # First run: an empty queue here means no config, not a finished day.
+            print(f"\n  {dim('no config yet —')} {bold('mm init')} {dim('writes a starter ~/.mm/mm.toml')}")
+            print(f"  {dim('then:')} mm {dim('· the manual is')} mm help\n")
         else:
             print(f"\n  {good('all clear')} {dim('— queue and stack empty')}\n")
     if state["quick"]:
@@ -88,6 +115,7 @@ def cmd_next(state, _args):
 
 def cmd_peek(state, _args):
     """Like mm next, but never starts/touches the active timer. Just a glance."""
+    _ensure_habits(state)
     kind, _idx, item = find_active(state)
     if item:
         started = state["active"]["started_at"] if (state["active"] and state["active"]["id"] == item["id"]) else None
@@ -120,7 +148,11 @@ def cmd_done(state, args):
         item["done_at"] = now_iso()
         state["archive"].append(item)
         log_event(state, f"done: [{item['id']}] {item['text']}")
-        print(f"\n  {good('✓ done')}  {dim(str(item['id']))}  {item['text']}")
+        slot = record_done(state, item)
+        extra = ""
+        if slot is not None:
+            extra = dim(f"  · streak {slot.get('streak', 0)}")
+        print(f"\n  {good('✓ done')}  {dim(str(item['id']))}  {item['text']}{extra}")
         state["active"] = None
         if is_gate_item(item):
             reward_check(state)
@@ -321,17 +353,32 @@ def cmd_find(state, args):
     hits = []
     for container in ("stack", "queue", "quick"):
         for t in state[container]:
-            if query in t["text"].lower() or query in (t.get("note") or "").lower():
+            blob = " ".join([
+                t.get("text") or "", t.get("note") or "",
+                t.get("habit") or "", t.get("habit_type") or "", t.get("track") or "",
+            ]).lower()
+            if query in blob:
                 hits.append((container, t))
     for t in state["archive"]:
-        if query in t["text"].lower() or query in (t.get("note") or "").lower():
+        blob = " ".join([
+            t.get("text") or "", t.get("note") or "",
+            t.get("habit") or "", t.get("habit_type") or "", t.get("track") or "",
+        ]).lower()
+        if query in blob:
             hits.append(("archive", t))
-    if not hits:
+    from .habits import search_habits
+    habit_hits = search_habits(query)
+    if not hits and not habit_hits:
         print(f"No matches for '{query}'.")
         return
     for container, t in hits:
         note = f"  — note: {t['note']}" if t.get("note") else ""
-        print(f"[{container}] [{t['id']}] {t['text']}{note}")
+        tag = f"  · {t['habit_type']}" if t.get("habit_type") else ""
+        print(f"[{container}] [{t['id']}] {t['text']}{tag}{note}")
+    if habit_hits:
+        print(dim(f"  habits matching '{query}':"))
+        for h in habit_hits:
+            print(f"    habit  {h['name']}  {dim(h['type'] + ' · every ' + str(h['repeat']) + 'd')}")
 
 
 def cmd_undo(state, _args):
@@ -364,12 +411,15 @@ def _cap_str(rules, container, state):
 
 
 def cmd_status(state, _args):
+    _ensure_habits(state)
     rules = load_rules()
     books_data = load_books()
     _kind, _idx, active = find_active(state)
     active_id = active["id"] if active else None
 
-    def section(title, count_str, items, note=""):
+    gate_mode = has_open_gate(state)
+
+    def section(title, count_str, items, note="", gated=False):
         head = f"  {bold(title)}  {dim(count_str)}"
         if note:
             head += f"   {accent(note)}"
@@ -377,13 +427,15 @@ def cmd_status(state, _args):
         if not items:
             print(dim("     —"))
         for t in items:
-            print(fmt_line(t, active=(t["id"] == active_id), books_data=books_data))
+            # Dim what a gate makes unreachable, so the → is never a mystery.
+            locked = gated and gate_mode and not is_gate_item(t) and not t.get("suspended")
+            print(fmt_line(t, active=(t["id"] == active_id), books_data=books_data, locked=locked))
         print()
 
     print()
     section("interrupt", _cap_str(rules, "stack", state), list(reversed(state["stack"])))
-    gate_note = "gate open — only gate items selectable" if has_open_gate(state) else ""
-    section("queue", _cap_str(rules, "queue", state), state["queue"], gate_note)
+    gate_note = "gate open — only gate items selectable" if gate_mode else ""
+    section("queue", _cap_str(rules, "queue", state), state["queue"], gate_note, gated=True)
     section("quick", _cap_str(rules, "quick", state), state["quick"])
     if state.get("backlog"):
         section("backlog", str(len(state["backlog"])), state["backlog"])
@@ -409,7 +461,27 @@ def cmd_stats(state, _args):
     print(f"    {dim('suspended')}  {suspended_now}")
     print(f"    {dim('open')}       {open_now} {dim('queue+stack')} · {len(state['quick'])} {dim('quick')}")
     print(f"    {dim('gates')}      {good(str(gates_closed))} {dim('closed ·')} {gates_open} {dim('open')}")
-    print(f"    {dim('streak')}     {bold(str(streak))} {dim('day(s) all-gates-closed')}\n")
+    print(f"    {dim('streak')}     {bold(str(streak))} {dim('day(s) all-gates-closed')}")
+    declared = load_declared()
+    if declared:
+        progress = load_progress()
+        due = done = missed = 0
+        today = today_str()
+        for h in declared:
+            if not h["enabled"] or h["archived"]:
+                continue
+            slot = slot_for(progress, h["name"])
+            hist = slot.get("history") or {}
+            if hist.get(today) == "done":
+                done += 1
+            elif hist.get(today) == "missed":
+                missed += 1
+            else:
+                from .habits import is_due_on
+                if is_due_on(h, today, slot.get("anchor") or today):
+                    due += 1
+        print(f"    {dim('habits')}     {good(str(done))} {dim('done ·')} {due} {dim('due ·')} {missed} {dim('missed')}")
+    print()
 
 
 def cmd_session(state, _args):
@@ -597,6 +669,20 @@ def cmd_onboard(state, args):
     if skipped:
         print(dim(f"  skipped (already queued): {', '.join(skipped)}"))
 
+    h_added, h_back, h_skip, h_miss = ensure_due_habits(state, rules, today=today, quiet=True)
+    if h_added:
+        print(dim(f"  habits due:"))
+        books_data = load_books()
+        for item in h_added:
+            print(fmt_line(item, books_data=books_data))
+        print()
+    if h_miss:
+        print(dim(f"  missed: {', '.join(f'{n}@{d}' for n, d in h_miss)}"))
+    if h_back:
+        print(dim(f"  {len(h_back)} habit(s) over capacity → backlog"))
+    if h_skip:
+        print(dim(f"  habits skipped: {', '.join(h_skip)}"))
+
 
 def cmd_reset(state, args):
     """Clear the per-day onboard lock. Does not touch the queue unless you
@@ -648,12 +734,29 @@ def cmd_rules_show(state, _args):
     cap = rules.get("capacity", {})
     print("    " + dim("capacity  ") + ", ".join(f"{k}={v.get('max')}({v.get('on_full')})" for k, v in cap.items()))
     specs = compile_rules(rules, weekday)
-    print(f"\n  {bold('today')} {dim('· ' + weekday)} — {len(specs)} item(s):\n")
+    print(f"\n  {bold('today')} {dim('· ' + weekday)} — {len(specs)} track item(s):\n")
     if not specs:
-        print(dim("     nothing scheduled"))
+        print(dim("     nothing from tracks"))
     for s in specs:
         flag = "gate" if (s.get("dominant") or s.get("gate")) else s.get("position", "back")
         print(f"     {s['text']}  {dim('· ' + s['track'] + ' · ' + flag)}")
+    from .habits import is_due_on, load_progress, slot_for
+    habits = load_declared(rules)
+    if habits:
+        progress = load_progress()
+        print(f"\n  {bold('habits')} {dim('due today')}\n")
+        shown = 0
+        for h in habits:
+            if not h["enabled"] or h["archived"]:
+                continue
+            slot = slot_for(progress, h["name"])
+            anchor = slot.get("anchor") or today_str()
+            if is_due_on(h, today_str(), anchor):
+                flag = h["position"] + (" gate" if h.get("gate") else "")
+                print(f"     {h['name']}  {dim('· ' + h['type'] + ' · every ' + str(h['repeat']) + 'd · ' + flag)}")
+                shown += 1
+        if not shown:
+            print(dim("     none due today"))
     print()
 
 
@@ -734,7 +837,7 @@ def cmd_init(_state, args):
     if os.path.exists(dest) and not getattr(args, "force", False):
         print(f"Already have {dest} — pass --force to replace.")
         return
-    example = os.path.join(os.path.dirname(__file__), "..", "examples", "mm.toml")
+    example = os.path.join(os.path.dirname(__file__), "data", "mm.toml")
     if os.path.exists(example):
         with open(example, encoding="utf-8") as f:
             body = f.read()
@@ -743,25 +846,28 @@ def cmd_init(_state, args):
     with open(dest, "w", encoding="utf-8") as f:
         f.write(body)
     print(f"  {good('✓')} wrote {dest}")
-    print(dim("    edit tracks, then: mm rules validate && mm onboard"))
+    print(dim("    edit [[habits]], then: mm rules validate && mm"))
 
 
 def dumps_starter():
     from .config import dumps_toml
     return dumps_toml({
-        "version": 2,
-        "onboard": {"strict_gate": True, "order": ["learn"]},
+        "version": 3,
+        "onboard": {"strict_gate": True, "order": []},
         "capacity": default_capacity(),
-        "tracks": {
-            "learn": {
-                "type": "rotation",
-                "count": 1,
-                "dominant": True,
-                "position": "gate",
-                "label": "{value}",
-                "items": ["One focused session on the thing that matters"],
+        "habits": [
+            {
+                "name": "One focused session",
+                "type": "habit",
+                "repeat": 1,
+                "enabled": 1,
+                "archived": 0,
+                "position": "queue",
+                "gate": True,
+                "weight": 1,
             },
-        },
+        ],
+        "tracks": {},
         "rewards": {"daily": "The rest of the evening is yours."},
     })
 

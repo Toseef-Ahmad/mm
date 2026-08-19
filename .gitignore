@@ -9,4 +9,5 @@ build/
 .state-*.tmp
 .rules-*.tmp
 .books-*.tmp
+.books-config-*.tmp
 web/

@@ -6,7 +6,8 @@ from .state import log_event
 from .util import accent, bold, dim, good, now_iso, today_str, warn
 
 
-def new_item(state, text, gate=False, dominant=False, track=None, rule_id=None, ref=None, group=None):
+def new_item(state, text, gate=False, dominant=False, track=None, rule_id=None,
+             ref=None, group=None, habit=None, habit_due=None, habit_type=None, weight=None):
     item = {"id": state["next_id"], "text": text, "added_at": now_iso()}
     if dominant:
         gate = True
@@ -22,6 +23,14 @@ def new_item(state, text, gate=False, dominant=False, track=None, rule_id=None, 
         item["ref"] = ref
     if group:
         item["group"] = group
+    if habit:
+        item["habit"] = habit
+    if habit_due:
+        item["habit_due"] = habit_due
+    if habit_type:
+        item["habit_type"] = habit_type
+    if weight:
+        item["weight"] = weight
     state["next_id"] += 1
     return item
 
@@ -119,19 +128,23 @@ def elapsed_str(started_at):
     return f"{mins}m{secs:02d}s"
 
 
-def item_tag(item, books_data=None):
+def item_tag(item, books_data=None, locked=False):
     states = []
     if item.get("blocked"):
         states.append(f"blocked: {item['blocked_reason']}" if item.get("blocked_reason") else "blocked")
     if item.get("suspended"):
         states.append("suspended")
+    if locked:
+        states.append("gate-locked")
     return dim("  · " + ", ".join(states)) if states else ""
 
 
-def fmt_line(item, active=False, books_data=None):
+def fmt_line(item, active=False, books_data=None, locked=False):
+    """locked: sits in the queue but a gate makes it unreachable right now."""
     marker = accent("→") if active else " "
     idcol = dim(f"{item['id']:>2}")
-    return f"  {marker} {idcol}  {item['text']}{item_tag(item, books_data)}"
+    text = dim(item["text"]) if locked else item["text"]
+    return f"  {marker} {idcol}  {text}{item_tag(item, books_data, locked)}"
 
 
 def leading_gate_count(queue):

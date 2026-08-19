@@ -115,6 +115,51 @@ def load_books_config():
         return None
 
 
+def save_books_config(config):
+    """Keep the declared list in sync with mm book add/rm/daily.
+    Manual edits still work; mm book sync copies this file into books.json."""
+    P.ensure()
+    fd, tmp = tempfile.mkstemp(dir=P.dir, prefix=".books-config-", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(config, f, indent=2, ensure_ascii=False)
+            f.write("\n")
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, P.books_config)
+    finally:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+
+
+def _config_or_empty():
+    return load_books_config() or {"books": [], "daily_units": 2}
+
+
+def declare_book(title, pages=0, group=None):
+    config = _config_or_empty()
+    books = config.setdefault("books", [])
+    if any(str(b.get("title", "")).lower() == title.lower() for b in books):
+        return
+    entry = {"title": title, "pages": pages}
+    if group:
+        entry["group"] = group
+    books.append(entry)
+    save_books_config(config)
+
+
+def undeclare_book(title):
+    config = load_books_config()
+    if not config:
+        return
+    before = config.get("books", [])
+    after = [b for b in before if str(b.get("title", "")).lower() != title.lower()]
+    if len(after) == len(before):
+        return
+    config["books"] = after
+    save_books_config(config)
+
+
 def cmd_book_add(_state, args):
     data = load_books()
     title, pages = parse_book_title_pages(args.title)
@@ -134,6 +179,7 @@ def cmd_book_add(_state, args):
         entry["group"] = args.group
     data["books"].append(entry)
     save_books(data)
+    declare_book(title, pages, getattr(args, "group", None))
     tag = f" [group: {args.group}]" if getattr(args, "group", None) else ""
     pages_s = f"{pages}p" if pages else "daily checklist (no page target)"
     print(f"  {good('+')} book [{book_id}]  {title}  {dim(pages_s)}{tag}")
@@ -206,6 +252,9 @@ def cmd_book_daily(_state, args):
     data = load_books()
     data["daily_units"] = n
     save_books(data)
+    config = _config_or_empty()
+    config["daily_units"] = n
+    save_books_config(config)
     print(f"  {good('✓')} daily book window set to {n}")
 
 
@@ -286,4 +335,5 @@ def cmd_book_rm(_state, args):
         return
     data["books"] = [b for b in data["books"] if b["id"] != args.id]
     save_books(data)
+    undeclare_book(book["title"])
     print(f"🗑  Removed [{book['id']}]: {book['title']}")

@@ -27,3 +27,8 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["mm*"]
+
+[tool.setuptools.package-data]
+# The manual and the annotated config ship with the wheel, so `mm help` and
+# `mm init` behave the same whether you pip-installed or cloned.
+mm = ["data/mm.1", "data/mm.toml"]

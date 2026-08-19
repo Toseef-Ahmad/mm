@@ -5,6 +5,11 @@ from .books import (
     cmd_book_add, cmd_book_daily, cmd_book_done, cmd_book_list,
     cmd_book_progress, cmd_book_rm, cmd_book_sync,
 )
+from .habits import (
+    cmd_habit_add, cmd_habit_find, cmd_habit_list, cmd_habit_log,
+    cmd_habit_miss, cmd_habit_rm, cmd_habit_set,
+)
+from .obsidian import cmd_obsidian_sync
 from .ops import (
     cmd_add, cmd_archive, cmd_backlog, cmd_block, cmd_capacity, cmd_done,
     cmd_edit, cmd_export, cmd_find, cmd_flush_quick, cmd_init, cmd_log,
@@ -17,11 +22,45 @@ from .state import load, save
 from .util import Lock
 
 
+def _man_page():
+    """A pip install has no ~/.local/share/man, so the page ships in the package."""
+    from pathlib import Path
+    pkg = Path(__file__).resolve().parent
+    candidates = (
+        Path.home() / ".local/share/man/man1/mm.1",
+        pkg / "data" / "mm.1",
+        pkg.parent / "man" / "mm.1",
+    )
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def cmd_help(_state=None, _args=None):
+    """Open the mm(1) manual. Does not touch state."""
+    import os
+    import shutil
+    import sys
+    page = _man_page()
+    if page is None:
+        print("mm(1) not found. Try: mm --help", file=sys.stderr)
+        raise SystemExit(1)
+    if shutil.which("man") is None:
+        with open(page, encoding="utf-8") as f:  # no man(1) on this box (some containers)
+            print(f.read())
+        return
+    os.execvp("man", ["man", str(page)])
+
+
 def main():
+    from . import __version__
     p = argparse.ArgumentParser(
         prog="mm",
         description="Decide what's next. Never when. Queue + interrupt stack + gates.",
+        epilog="Full manual: man mm   (or mm help)",
     )
+    p.add_argument("--version", action="version", version=f"mm {__version__}")
     sub = p.add_subparsers(dest="cmd")
 
     a = sub.add_parser("add", help="add to the main queue")
@@ -104,6 +143,9 @@ def main():
     lg.add_argument("n", nargs="?", type=int, default=None)
     lg.set_defaults(func=cmd_log)
 
+    hlp = sub.add_parser("help", help="open the mm(1) manual")
+    hlp.set_defaults(func=cmd_help, skip_state=True)
+
     ini = sub.add_parser("init", help="write a starter ~/.mm/mm.toml")
     ini.add_argument("--force", action="store_true")
     ini.set_defaults(func=cmd_init)
@@ -155,6 +197,58 @@ def main():
     bkr.add_argument("id", type=int)
     bkr.set_defaults(func=cmd_book_rm)
 
+    hb = sub.add_parser("habit", help="repeating items — books, walks, courses, same object")
+    hb_sub = hb.add_subparsers(dest="habit_cmd", required=True)
+
+    hbl = hb_sub.add_parser("list", help="declared habits, streaks, last done/missed")
+    hbl.add_argument("query", nargs="*", default=None, help="optional search (name/type/tags)")
+    hbl.add_argument("-t", "--type", default=None, help="filter by type tag (book, fitness, …)")
+    hbl.set_defaults(func=cmd_habit_list)
+
+    hba = hb_sub.add_parser("add")
+    hba.add_argument("name", nargs="+")
+    hba.add_argument("-t", "--type", default="habit", help="search tag: book, course, fitness, …")
+    hba.add_argument("-r", "--repeat", type=int, default=1, help="due every N days (1 = daily)")
+    hba.add_argument("-p", "--position", choices=["queue", "stack", "quick"], default="queue")
+    hba.add_argument("--place", choices=["gate", "front", "back"], default=None)
+    hba.add_argument("-w", "--weight", type=int, default=1)
+    hba.add_argument("--order", type=int, default=None, help="queue position; 1 = front")
+    hba.add_argument("-d", "--description", default="")
+    hba.add_argument("--days", default=None, help="optional weekdays, e.g. Mon,Wed,Fri")
+    hba.add_argument("--tags", default=None)
+    hba.add_argument("--gate", action="store_true")
+    hba.add_argument("--obsidian", default=None, help="daily-note property slug (e.g. cs302)")
+    hba.set_defaults(func=cmd_habit_add)
+
+    hbs = hb_sub.add_parser("set", help="change one field: position, repeat, enabled, type, …")
+    hbs.add_argument("name")
+    hbs.add_argument("field")
+    hbs.add_argument("value", nargs="+")
+    hbs.set_defaults(func=cmd_habit_set)
+
+    hbr = hb_sub.add_parser("rm")
+    hbr.add_argument("name", nargs="+")
+    hbr.set_defaults(func=cmd_habit_rm)
+
+    hblog = hb_sub.add_parser("log", help="done/missed history")
+    hblog.add_argument("name", nargs="*", default=None)
+    hblog.set_defaults(func=cmd_habit_log)
+
+    hbf = hb_sub.add_parser("find")
+    hbf.add_argument("query", nargs="+")
+    hbf.set_defaults(func=cmd_habit_find)
+
+    hbm = hb_sub.add_parser("miss", help="mark today missed and drop the open item")
+    hbm.add_argument("name", nargs="+")
+    hbm.set_defaults(func=cmd_habit_miss)
+
+    obs = sub.add_parser("obsidian", help="sync habits with the Obsidian daily note")
+    obs.add_argument("obsidian_cmd", nargs="?", default="sync",
+                     choices=["sync", "watch", "autostart"])
+    obs.add_argument("action", nargs="?", default=None,
+                     choices=["on", "off", "status"], help="for autostart")
+    obs.set_defaults(func=cmd_obsidian_sync)
+
     ru = sub.add_parser("rules")
     ru_sub = ru.add_subparsers(dest="rules_cmd", required=True)
     ru_sub.add_parser("show").set_defaults(func=cmd_rules_show)
@@ -175,6 +269,17 @@ def main():
     args = p.parse_args()
     if not getattr(args, "func", None):
         args.func = cmd_next
+    if getattr(args, "obsidian_cmd", None) == "watch":
+        from .obsidian import cmd_obsidian_watch
+        cmd_obsidian_watch(None, args)
+        return
+    if getattr(args, "obsidian_cmd", None) == "autostart":
+        from .obsidian import cmd_obsidian_autostart
+        cmd_obsidian_autostart(None, args)
+        return
+    if getattr(args, "skip_state", False):
+        args.func(None, args)
+        return
     with Lock():
         state = load()
         args.func(state, args)

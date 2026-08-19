@@ -46,7 +46,9 @@ def _merge_rules_defaults(rules):
         slot.setdefault("max", defaults["max"])
         slot.setdefault("on_full", defaults["on_full"])
     rules.setdefault("tracks", {})
+    rules.setdefault("habits", [])
     rules.setdefault("rewards", {})
+    rules.setdefault("obsidian", {})
     return rules
 
 
@@ -72,8 +74,18 @@ def _toml_key(k):
 
 
 def dumps_toml(obj):
-    """Small TOML writer for mm's nested-dict schema. No extra dependency."""
+    """Small TOML writer for mm's nested-dict schema. No extra dependency.
+
+    Lists of dicts become array-of-tables (`[[habits]]`).
+    """
     chunks = []
+    obj = dict(obj)
+    array_tables = {}
+    for k, v in list(obj.items()):
+        if isinstance(v, list) and v and all(isinstance(x, dict) for x in v):
+            array_tables[k] = obj.pop(k)
+        elif isinstance(v, list) and not v and k == "habits":
+            obj.pop(k)
 
     def emit(path, d):
         scalars = {k: v for k, v in d.items() if not isinstance(v, dict)}
@@ -93,6 +105,19 @@ def dumps_toml(obj):
             emit(child, v)
 
     emit("", obj)
+    for key, rows in array_tables.items():
+        for row in rows:
+            chunks.append(f"[[{key}]]")
+            scalars = {k: v for k, v in row.items() if not isinstance(v, dict)}
+            nested = {k: v for k, v in row.items() if isinstance(v, dict)}
+            for k, v in scalars.items():
+                if v is None or v == "" or v == []:
+                    continue
+                chunks.append(f"{_toml_key(k)} = {_toml_scalar(v)}")
+            chunks.append("")
+            for k, v in nested.items():
+                child = f"{key}.{_toml_key(k)}"
+                emit(child, v)
     return "\n".join(chunks).rstrip() + "\n"
 
 
@@ -122,8 +147,18 @@ def load_rules():
 def save_rules(rules):
     P.ensure()
     kind = P.rules_kind or "toml"
+    to_dump = rules
     if kind == "toml":
-        body = dumps_toml(rules)
+        to_dump = dict(rules)
+        onboard = dict(to_dump.get("onboard") or {})
+        if not onboard.get("order"):
+            onboard.pop("order", None)
+            to_dump["onboard"] = onboard
+        if not to_dump.get("tracks"):
+            to_dump.pop("tracks", None)
+        if not to_dump.get("obsidian"):
+            to_dump.pop("obsidian", None)
+        body = dumps_toml(to_dump)
         path, prefix = P.rules_toml, ".rules-"
     else:
         body = json.dumps(rules, indent=2, ensure_ascii=False)
@@ -264,8 +299,11 @@ def validate_rules(rules):
     errors, warnings = [], []
     onboard = rules.get("onboard", {})
     tracks = rules.get("tracks", {})
-    if not isinstance(tracks, dict) or not tracks:
-        warnings.append("no tracks defined — onboard will queue nothing.")
+    from .habits import normalize_habit
+    habits = rules.get("habits") or []
+    has_habits = bool(habits)
+    if (not isinstance(tracks, dict) or not tracks) and not has_habits:
+        warnings.append("no tracks or habits defined — onboard will queue nothing.")
     for name in onboard.get("order", []):
         if name not in tracks:
             warnings.append(f"onboard.order references unknown track '{name}'.")
@@ -279,6 +317,21 @@ def validate_rules(rules):
             errors.append(f"track '{name}' has invalid type '{track.get('type')}' (expected one of {sorted(valid_types)}).")
         if track.get("position", "back") not in valid_pos:
             errors.append(f"track '{name}' has invalid position '{track.get('position')}'.")
+    if isinstance(habits, dict):
+        habits = [{"name": n, **(b or {})} for n, b in habits.items()]
+    if habits and not isinstance(habits, list):
+        errors.append("habits must be an array of objects.")
+    else:
+        seen = set()
+        for i, row in enumerate(habits or []):
+            habit, err = normalize_habit(row, i)
+            if err:
+                errors.append(err)
+                continue
+            key = habit["name"].lower()
+            if key in seen:
+                errors.append(f"duplicate habit name '{habit['name']}'.")
+            seen.add(key)
     for cname, slot in rules.get("capacity", {}).items():
         if not isinstance(slot, dict) or not isinstance(slot.get("max"), int):
             errors.append(f"capacity.{cname}.max must be an integer.")

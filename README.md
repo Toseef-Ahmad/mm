@@ -34,7 +34,8 @@ Python 3.11+. Zero pip dependencies.
 ```bash
 git clone https://github.com/Toseef-Ahmad/mm.git
 cd mm
-./install.sh          # writes ~/bin/mm → this repo
+./install.sh          # writes ~/bin/mm → this repo, and man mm
+man mm                # the manual
 mm init               # starter ~/.mm/mm.toml
 mm rules validate
 mm onboard
@@ -48,35 +49,84 @@ mm onboard
 
 One file you edit: **`~/.mm/mm.toml`**. (JSON `mm.rules.json` still loads if TOML is absent.)
 
-TOML is the format tools actually ship — Cargo, `pyproject.toml`, ripgrep, GitHub CLI. Sections map 1:1 onto the engine. Four track types cover any learning:
+### Habits
 
-| Type | What it is | Who uses it |
-|---|---|---|
-| `rotation` | A cycling window over a list | courses, papers, études, kata, languages |
-| `weekday` | A Mon–Sun table | weekly topics, review days, rest slots (`""`) |
-| `static` | The same items every day | a practice you never skip |
-| `list` | Alias of `static` | — |
+Everything you return to is the same object — a book, a walk, a course, meditation. MM reads `[[habits]]` on load and injects whatever is **due** into `queue`, `stack`, or `quick`. You do not re-add them by hand.
 
-`dominant = true` makes a track a **gate**. `position` is `gate` (front, blocking), `front`, or `back`. `onboard.order` is the only list that gets queued — a track missing from `order` is silent.
-
-**CS student** — courses as repeating checklists (`mm book add CS302`, no page count), plus a weekday deep-topic.
-
-**Language learner** — a `rotation` over decks or textbooks; `count = 2` means two a day, the rest wait their turn.
-
-**Musician / researcher** — `items = ["Bach invention 4", "etude 12", …]` on a rotation track. Same engine. No new commands.
-
-Books that *do* have a page target still close by reading: `mm done` is refused until `mm book progress` that day. Checklist books (`pages` omitted or `0`) close with `mm done` and stay in rotation until `mm book done <id>`.
-
-```bash
-mm book add "Thinking Mathematically"     # daily checklist
-mm book add "CLRS" 1292                   # page-tracked
-mm book daily 4
-mm book sync --prune                      # ~/.mm/books_config.json is the list
+```toml
+[[habits]]
+name = "CS302"
+type = "book"          # search tag — book, course, fitness, mind, …
+repeat = 1             # 1 = daily; 3 = every 3rd day
+enabled = 1
+archived = 0
+position = "queue"     # queue | stack | quick
+gate = true
+weight = 1
 ```
 
-A books track must be `type = "rotation"` (with `source = "books"`, or just named `books`) so `mm book add` actually feeds onboard. A `static` books track ignores the book list.
+`repeat = 3` is a gap, not a broken streak. The two days it was never due do not reset the counter. Miss a **due** day and it is marked missed.
 
-Full annotated example: [`examples/mm.toml`](examples/mm.toml).
+When the calendar day rolls over, MM drops yesterday's unfinished copies, marks those due-days **missed** (streak resets), and injects a **fresh** due set from `[[habits]]`. A habit you closed yesterday keeps its streak and still appears once today. Same habit is never queued twice.
+
+Queue position is **`order`** (1 = front). Habits without `order` fall back to **weight** (higher first).
+
+```bash
+mm habit set Exercise order 1
+```
+
+```bash
+mm habit add Walking --type fitness --repeat 1
+mm habit set CS302 position stack
+mm habit set CS302 repeat 3
+mm habit list -t book
+mm habit find fitness
+mm habit miss Walking          # today didn't happen — streak resets
+mm habit log CS302
+```
+
+Progress (streak, missed, last done) lives in `~/.mm/habits.json`. You own the list; mm owns the history.
+
+### Obsidian daily notes
+
+MM can share the same habit list with an Obsidian daily note. Toggle a property in the note or `mm done` — both sides update. New habits in either place grow the mapping.
+
+```toml
+[obsidian]
+enabled = true
+vault = "/path/to/Professional_notes_from_scratch"
+folder = "20 Journal/Personal"
+template = "80 System/Templates/Daily Journal Template.md"
+
+[[habits]]
+name = "CS302"
+obsidian = "cs302"     # daily-note property; slug of the name if omitted
+gate = true
+weight = 4
+```
+
+`energy` stays a 1–5 mood number, not a habit. Check and uncheck both sync. Runs on `mm next` / `mm status` / `mm done`, or:
+
+```bash
+mm obsidian sync
+mm obsidian watch              # live — leave running while you toggle in Obsidian
+mm obsidian autostart on       # same thing in the background, across logins (macOS)
+mm obsidian autostart status   # off
+```
+
+Sync only moves a box that actually moved. `~/.mm/obsidian.json` remembers the
+values the two sides last agreed on, so mm can tell "you unticked this" from
+"mm closed it and has not written the note yet" — without that, closing an item
+would read as an uncheck and reopen itself.
+
+`autostart` needs one grant: macOS hides Desktop and Documents from background
+agents, so add the Python interpreter it names to **System Settings → Privacy &
+Security → Full Disk Access**. It refuses to claim success until it sees the
+watcher running; until then `mm obsidian watch` in a terminal works as-is.
+
+Tracks (`rotation` / `weekday` / `static`) still compile on `mm onboard` if you want them. Habits do not need onboard — `mm` / `mm next` injects due ones.
+
+Full annotated example: [`mm/data/mm.toml`](mm/data/mm.toml) — this is exactly what `mm init` writes.
 
 ---
 
@@ -124,7 +174,9 @@ mm rules strict off          # turn the leftover-gate lock off
 | `mm undo` | Reverse the last mutation |
 | `mm status` · `mm stats` · `mm session` · `mm archive [today]` | See state |
 | `mm rules show` · `validate` · `strict on\|off` | Preview / check / lock |
-| `mm book …` | `add` `progress` `done` `list` `sync [--prune]` `daily` `rm` |
+| `mm habit …` | `add` `set` `list [-t type]` `find` `log` `miss` `rm` |
+| `mm obsidian sync` · `watch` · `autostart on\|off\|status` | Pull/push today's daily-note habit properties; `watch` is live, `autostart` runs it in the background |
+| `mm book …` | `add` `progress` `done` `list` `sync [--prune]` `daily` `rm` (paged books; habits cover daily checklists) |
 | `mm capacity` · `mm backlog [--promote]` | Limits / overflow |
 | `mm start` · `mm stop` · `mm log` · `mm export` | Session / dump |
 
@@ -140,15 +192,17 @@ mm/
   ops.py      verbs (done, block, onboard, reset, …)
   model.py    queue physics (gates, selection, rewards)
   config.py   TOML/JSON load, compile tracks, capacity
+  habits.py   repeating items: due/miss/streak, inject into queue|stack|quick
+  obsidian.py daily-note frontmatter ↔ habits
   books.py    rotation source with optional page targets
   state.py    atomic JSON persistence + lock
   paths.py    ~/.mm layout; tests call use_home()
   util.py     time, color, file lock
 ```
 
-Want a new kind of learning? Add a `type` arm in `compile_track`. Do not add a new command if a track can say it.
+Want a new kind of learning? Add a habit. Do not add a new command if `type` + `repeat` + `position` can say it.
 
-State the tool owns: `~/.mm/state.json`, `books.json`. You own: `mm.toml`, `books_config.json`.
+State the tool owns: `~/.mm/state.json`, `habits.json`, `books.json`. You own: `mm.toml`, `books_config.json`.
 
 ---
 

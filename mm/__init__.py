@@ -18,6 +18,7 @@ def __getattr__(name):
         "LOCK_PATH": lambda: P.lock,
         "BOOKS_PATH": lambda: P.books,
         "BOOKS_CONFIG_PATH": lambda: P.books_config,
+        "HABITS_PATH": lambda: P.habits,
         "RULES_PATH": lambda: P.rules_json,
     }
     if name in mapping:

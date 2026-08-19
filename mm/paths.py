@@ -14,6 +14,7 @@ class Home:
             self.lock = self.state + ".lock"
             self.books = os.path.join(directory, "books.json")
             self.books_config = os.path.join(directory, "books_config.json")
+            self.habits = os.path.join(directory, "habits.json")
             self.rules_json = os.path.join(directory, "mm.rules.json")
             self.rules_toml = os.path.join(directory, "mm.toml")
             return self
@@ -22,6 +23,7 @@ class Home:
         self.lock = self.state + ".lock"
         self.books = os.environ.get("MM_BOOKS", os.path.join(self.dir, "books.json"))
         self.books_config = os.environ.get("MM_BOOKS_CONFIG", os.path.join(self.dir, "books_config.json"))
+        self.habits = os.environ.get("MM_HABITS", os.path.join(self.dir, "habits.json"))
         self.rules_json = os.environ.get("MM_RULES", os.path.join(self.dir, "mm.rules.json"))
         self.rules_toml = os.path.join(self.dir, "mm.toml")
         return self

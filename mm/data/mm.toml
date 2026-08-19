@@ -1,0 +1,65 @@
+# mm — one file. Everything you return to is a habit.
+#
+# weight     higher = earlier in the queue
+#            mm habit set CS302 weight 10
+# repeat     1 = daily; 3 = every 3rd day (gap days do not break streak)
+# position   queue | stack | quick
+
+version = 3
+
+[onboard]
+strict_gate = true
+
+[capacity.queue]
+max = 14
+on_full = "backlog"
+
+[capacity.stack]
+max = 5
+on_full = "reject"
+
+[capacity.quick]
+max = 50
+on_full = "warn"
+
+[rewards]
+daily = "The rest of the evening is yours."
+
+# Optional. Toggle properties on today's daily note stay in sync with mm done.
+# [obsidian]
+# enabled = true
+# vault = "/path/to/Professional_notes_from_scratch"
+# folder = "20 Journal/Personal"
+# template = "80 System/Templates/Daily Journal Template.md"
+
+[[habits]]
+name = "CS302"
+type = "book"
+repeat = 1
+enabled = 1
+archived = 0
+position = "queue"
+gate = true
+weight = 10
+obsidian = "cs302"
+
+[[habits]]
+name = "Walk"
+description = "one loop outside, no phone"
+type = "fitness"
+repeat = 1
+enabled = 1
+archived = 0
+position = "queue"
+gate = false
+weight = 3
+
+[[habits]]
+name = "Deep practice"
+type = "course"
+repeat = 3
+enabled = 1
+archived = 0
+position = "stack"
+gate = true
+weight = 5
