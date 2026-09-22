@@ -7,7 +7,12 @@
 [![deps](https://img.shields.io/badge/dependencies-none-brightgreen)](pyproject.toml)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-A terminal queue that shows you **one task** — the one you just added.
+A terminal queue for your attention. Put the work in the queue so you are
+not holding it in your head. `mm` shows one task. If something more
+important comes up, `mm add -p` stacks it; when you `mm done`, you are
+back on the queue. Small nags go to quick (`mm add -q`) and do not jump
+the line.
+
 If you want CS302 today, you type `mm add "CS302"`. Tomorrow it is not
 there unless you add it again.
 

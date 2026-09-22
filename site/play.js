@@ -3,6 +3,7 @@
   var steps = [
     {
       cmd: 'mm add "CS302"',
+      say: "The work leaves your head and sits in the queue.",
       out: [{ k: "good", t: "  + queued  1  CS302" }],
       trays: {
         interrupt: [],
@@ -12,6 +13,7 @@
     },
     {
       cmd: "mm",
+      say: "mm shows that one thing. You do not pick.",
       out: [
         { k: "", t: "" },
         { k: "arrow", t: "  →  1  CS302   0m00s active" },
@@ -25,6 +27,7 @@
     },
     {
       cmd: 'mm add -p "prod is down"',
+      say: "Something more important just came up. It goes on the stack, above the queue.",
       out: [{ k: "hot", t: "  ! interrupt  2  prod is down" }],
       trays: {
         interrupt: [{ id: "2", text: "prod is down", hot: true }],
@@ -34,6 +37,7 @@
     },
     {
       cmd: "mm",
+      say: "The stack goes first. CS302 is still underneath.",
       out: [
         { k: "", t: "" },
         { k: "arrow", t: "  →  2  prod is down   interrupt" },
@@ -47,6 +51,7 @@
     },
     {
       cmd: "mm done",
+      say: "The interruption is finished. You are back on CS302.",
       out: [
         { k: "", t: "" },
         { k: "good", t: "  ✓ done  2  prod is down" },
@@ -62,6 +67,7 @@
     },
     {
       cmd: 'mm add -q "email Sam"',
+      say: "A small nag goes in quick. It does not jump the line, and you can stop rehearsing it.",
       out: [{ k: "dim", t: "  + quick  3  email Sam" }],
       trays: {
         interrupt: [],
@@ -160,6 +166,8 @@
     stop();
     screen.replaceChildren();
     renderTrays(empty);
+    var beat0 = document.getElementById("beat");
+    if (beat0) beat0.textContent = "Nothing is in the box until you type it.";
     replay.disabled = true;
     for (var n = 0; n < steps.length; n += 1) {
       var step = steps[n];
@@ -169,6 +177,8 @@
         line(screen, row.k, row.t);
       });
       renderTrays(step.trays);
+      var beat = document.getElementById("beat");
+      if (beat && step.say) beat.textContent = step.say;
       screen.parentElement.scrollTop = screen.parentElement.scrollHeight;
       await wait(700);
     }

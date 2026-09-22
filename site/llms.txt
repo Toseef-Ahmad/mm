@@ -1,8 +1,31 @@
 # mm
 
-mm is a terminal queue for one person. You add an item, it shows you that item, you mark it done.
+mm is a queue for your attention. You put work in it so you are not holding that work in your head. It shows one thing. If something more important comes up, you stack it. That goes first. When you finish it, you are back on the queue.
 
-Nothing appears unless you type `mm add`. Tomorrow the item is gone unless you add it again. There is no config file, no daily seed, no habits, no calendar, and no web app for the queue itself.
+Nothing appears unless you type `mm add`. Tomorrow the item is gone unless you add it again. There is no config file, no daily seed, no habits, and no calendar.
+
+## The three places
+
+- queue — the line of real work. `mm add "task"`. First added, first done.
+- stack — something just became more important. `mm add -p "task"`. Last stacked, first done. Then the queue is where you were.
+- quick — a small nag. `mm add -q "task"`. It does not jump the line. Clear it with `mm flush-quick`.
+
+Bare `mm` is `mm next`.
+
+## Against other workflows
+
+- In your head: you rehearse the list instead of doing the work. Working memory holds about four chunks (Cowan, 2001).
+- A todo list: it stores tasks, then asks you to choose again.
+- A calendar: it decides when. mm never does.
+- Getting Things Done: same first move (get it out of your head), then projects, contexts, and a weekly review. mm stops at the three places.
+- Notes, tabs, and paper piles hold tasks. They do not name the interruption or put you back.
+
+## Why this shape
+
+- Cognitive offloading (Risko & Gilbert, 2016): write the task down so attention can stay on the work.
+- Attention residue (Leroy, 2009): leaving a task unfinished leaves attention behind. The stack plus `mm done` is the way back.
+- Interruptions (Mark): returning to the original task takes on the order of 23 minutes. The queue is the written return address.
+- The Zeigarnik effect (remembering unfinished tasks better) has not held up as a general rule. mm does not rely on it.
 
 ## Install
 
@@ -11,16 +34,4 @@ git clone https://github.com/Toseef-Ahmad/mm.git
 cd mm && ./install.sh
 ```
 
-Requires Python 3.11+. No pip dependencies. State is one file: `~/.mm/state.json`.
-
-## Containers
-
-- queue — FIFO, `mm add "task"`
-- interrupt stack — LIFO, `mm add -p "task"`, preempts the queue, then unwinds
-- quick — batched, `mm add -q "task"`, never shown as next; clear with `mm flush-quick`
-
-Bare `mm` is `mm next`.
-
-## Not this
-
-mm is not a planner. It does not inject work, track streaks, or sync notes.
+Python 3.11+. No pip dependencies. State is one file: `~/.mm/state.json`.

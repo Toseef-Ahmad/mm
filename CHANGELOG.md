@@ -2,6 +2,10 @@
 
 Notable changes per release. Dates are release dates, newest first.
 
+## Unreleased
+
+- The landing page is a guide: one afternoon, the three places, and how a queue differs from holding work in your head, a todo list, or a calendar.
+
 ## 3.0.0 — 2026-09-09
 
 Breaking reset: mm is a runtime box again. You add work when you want it.
