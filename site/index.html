@@ -3,28 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>mm — don’t hold the work in your head</title>
-  <meta name="description" content="mm is a queue for your attention. Add the work, see one thing, and stack anything more important on top. When that is done, you are back where you were.">
+  <title>mm — your head is for the work</title>
+  <meta name="description" content="mm is a box for what you are not doing yet. A gap becomes a scroll when nothing is next. An idea during the work needs a place behind it. You add it. mm shows one thing.">
   <link rel="canonical" href="https://mm.tafil.app/">
-  <meta property="og:title" content="mm — don’t hold the work in your head">
-  <meta property="og:description" content="Put work in a queue. If something more important comes up, stack it. mm shows one thing, then puts you back.">
+  <meta property="og:title" content="mm — your head is for the work">
+  <meta property="og:description" content="The box holds the rest. A gap already has a next thing. An idea during the work waits behind it.">
   <meta property="og:url" content="https://mm.tafil.app/">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <header class="wrap top">
     <a class="mark" href="/">mm</a>
     <nav>
-      <a href="#moments">Gaps</a>
-      <a href="#example">Example</a>
-      <a href="#compare">Compare</a>
-      <a href="#why">Why</a>
       <a href="#install">Install</a>
       <a href="https://github.com/Toseef-Ahmad/mm">GitHub</a>
     </nav>
@@ -32,33 +28,19 @@
 
   <main>
     <section class="wrap hero">
-      <p class="kicker">a queue for your attention</p>
-      <h1>Don’t hold the work<br>in your head.</h1>
-      <p class="lead">Your head is for the work itself. The queue holds everything else, so you are not rehearsing a list while you try to focus. mm shows one thing. If something more important comes up, you put it on the stack. It goes first. When you finish it, you are back on the queue.</p>
-      <ul class="glance">
-        <li><strong>Queue</strong> the work you meant to do <code>mm add "CS302"</code></li>
-        <li><strong>Now</strong> one thing, no picking <code>mm</code></li>
-        <li><strong>Stack</strong> something just became more important <code>mm add -p "prod is down"</code></li>
-        <li><strong>Quick</strong> a small nag, kept off the line <code>mm add -q "email Sam"</code></li>
-      </ul>
+      <h1>Your head is for the work.<br>The box holds the rest.</h1>
+      <p class="lead">A gap with nothing in front of you turns into a scroll, or the next episode. An idea in the middle of study has nowhere to sit, so it tugs at you, or you lose it an hour later. You put both in the box. mm shows one thing.</p>
+      <p class="now" id="beat">You’re about to study. Put it in the box, so your head can do the studying.</p>
 
       <div class="stage">
         <div class="term">
-          <div class="term-bar">
-            <span>mm 3.0</span>
-            <span>queue · stack · quick</span>
-          </div>
-          <pre class="screen" id="screen" aria-label="A recorded mm session"></pre>
-          <noscript><p>JavaScript plays the session. The ritual is <code>mm add "CS302"</code>, then <code>mm</code>, then <code>mm done</code>.</p></noscript>
-          <p class="beat" id="beat">Nothing is in the box until you type it.</p>
-          <div class="term-actions">
-            <button class="btn" id="replay" type="button">Play again</button>
-          </div>
+          <div class="term-bar"><span>mm</span><span>one thing at a time</span></div>
+          <div class="screen" id="screen" aria-live="polite"></div>
+          <button class="btn" id="replay" type="button">See it again</button>
         </div>
-
-        <div class="trays" aria-label="The three containers">
+        <div class="trays" aria-label="The box">
           <section class="tray">
-            <header>stack <span>just became first</span></header>
+            <header>stack <span>on top, until it’s done</span></header>
             <div id="tray-interrupt"></div>
           </section>
           <section class="tray">
@@ -66,7 +48,7 @@
             <div id="tray-queue"></div>
           </section>
           <section class="tray">
-            <header>quick <span>not on the line</span></header>
+            <header>quick <span>the nag, off the line</span></header>
             <div id="tray-quick"></div>
           </section>
         </div>
@@ -75,203 +57,54 @@
 
     <div class="sheet">
       <div class="wrap">
-        <h2 id="moments">Two times you lose the thread</h2>
-        <div class="moments">
+        <div class="scenes">
           <article>
-            <p class="kicker">A gap</p>
-            <h3>The empty minute fills itself.</h3>
-            <p>You finish a piece, or you are waiting. Nothing is in front of you. A feed or another episode starts on its own, and the hour goes. Put the next real thing in the queue before that minute arrives. When the gap opens, <code>mm</code> already has it. You do the next piece of work.</p>
-            <code>mm</code>
+            <h2>A gap</h2>
+            <p>You finish a problem, or a build is running, and for a minute nothing is in front of you. A feed will take that minute. It starts without asking you to decide.</p>
+            <p>Put the next piece of work in the queue before you need it. When the gap opens, type <code>mm</code>. The next thing is already there.</p>
           </article>
           <article>
-            <p class="kicker">An idea</p>
-            <h3>It shows up in the middle of the work.</h3>
-            <p>You are studying, or deep in something. An idea arrives. An hour later, another thing to do after this. Add it. It lines up behind the work you are in. Ask again and you are still on that work. When you finish, the idea is next. A tiny one can wait off the line.</p>
-            <code>mm add "write this up later"</code>
-            <code>mm add -q "email Sam"</code>
+            <h2>An idea, while you are in it</h2>
+            <p>You are studying, or deep in the work. An idea arrives. Later, another thing you mean to do after this. Keep it in your head and it pulls. Go do it and the work is gone.</p>
+            <p><code>mm add "write this up later"</code> lines it up behind the work you are in. You stay on that work. When you finish, the idea is next. A tiny one, <code>mm add -q "email Sam"</code>, waits off the line until you want it.</p>
           </article>
         </div>
 
-        <h2 id="example">One afternoon</h2>
-        <p>Same three tasks the whole way down. Nothing else appears.</p>
-        <ol class="story">
-          <li>
-            <p>You sit down to study. The course is in your head, so you put it in the queue.</p>
-            <code>mm add "CS302"</code>
-          </li>
-          <li>
-            <p>You ask what to do. There is one answer. You do not scan a list and pick the easy thing.</p>
-            <code>mm</code>
-          </li>
-          <li>
-            <p>You remember you should email Sam. That is a nag, not the work. Quick holds it so you can stop repeating it to yourself.</p>
-            <code>mm add -q "email Sam"</code>
-          </li>
-          <li>
-            <p>Production breaks. That is more important than the course, right now. The stack goes above the queue.</p>
-            <code>mm add -p "prod is down"</code>
-          </li>
-          <li>
-            <p>You ask again. The fire is the one thing. CS302 is still in the queue, untouched.</p>
-            <code>mm</code>
-          </li>
-          <li>
-            <p>The fire is out. mm puts you back on CS302. You did not have to remember where you were.</p>
-            <code>mm done</code>
-          </li>
-          <li>
-            <p>At a stopping point you empty quick. Email Sam, or drop it. It never jumped the line on its own.</p>
-            <code>mm flush-quick</code>
-          </li>
-        </ol>
-        <p class="note">Tomorrow CS302 is not there unless you add it again. mm does not plan the day, and it does not put anything in the box for you.</p>
+        <h2>What goes where</h2>
+        <ul class="where">
+          <li><span>Queue</span> the work you meant to do. First in, first done. <code>mm add "CS302"</code></li>
+          <li><span>Stack</span> something just became more important. Do it, then you are back. <code>mm add -p "prod is down"</code></li>
+          <li><span>Quick</span> a small thing that would nag you or clutter the line. <code>mm add -q "email Sam"</code></li>
+        </ul>
 
-        <h2>Three places</h2>
-        <div class="places">
-          <article>
-            <h3>Queue</h3>
-            <p>The line of real work. First thing you added is the first thing you do. Use it for the task you would otherwise keep rehearsing.</p>
-            <code>mm add "CS302"</code>
-          </article>
-          <article>
-            <h3>Stack</h3>
-            <p>For when something important is raised. Last thing you stacked is the thing you do now. Finish it, and the queue is where you left it.</p>
-            <code>mm add -p "prod is down"</code>
-          </article>
-          <article>
-            <h3>Quick</h3>
-            <p>Small tasks that distract you if they stay in your head, and clutter the line if you mix them with real work. They wait until you flush them.</p>
-            <code>mm add -q "email Sam"</code>
-          </article>
-        </div>
-
-        <h2 id="compare">Against the other ways</h2>
-        <div class="table-scroll">
-          <table class="compare">
-            <thead>
-              <tr>
-                <th></th>
-                <th>In your head</th>
-                <th>A todo list</th>
-                <th>A calendar</th>
-                <th>mm</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th>Where the task lives</th>
-                <td>You repeat it so you don’t forget.</td>
-                <td>In an app, with the rest of the list.</td>
-                <td>On a clock.</td>
-                <td>In the queue, outside your head.</td>
-              </tr>
-              <tr>
-                <th>When you sit down</th>
-                <td>You try to remember what mattered.</td>
-                <td>You open the list and choose again.</td>
-                <td>You do whatever the hour says.</td>
-                <td>You type <code>mm</code> and get one thing.</td>
-              </tr>
-              <tr>
-                <th>Something urgent</th>
-                <td>You drop the work and lose your place.</td>
-                <td>You star it, and still choose.</td>
-                <td>You move a block.</td>
-                <td>You stack it. Finish it. You are back.</td>
-              </tr>
-              <tr>
-                <th>A gap in the work</th>
-                <td>The phone is the easiest thing in the room.</td>
-                <td>You open the list and negotiate with it.</td>
-                <td>The block ended, so you wander.</td>
-                <td>The next thing is already chosen. Type <code>mm</code>.</td>
-              </tr>
-              <tr>
-                <th>An idea while you work</th>
-                <td>You hold it, or you chase it and lose the work.</td>
-                <td>You switch apps and start organizing it.</td>
-                <td>You stop to schedule it.</td>
-                <td>You add it behind the current work and stay there.</td>
-              </tr>
-              <tr>
-                <th>A two-minute nag</th>
-                <td>It keeps tapping you.</td>
-                <td>It sits next to the real work, and often wins.</td>
-                <td>It becomes a reminder.</td>
-                <td>Quick holds it until a checkpoint.</td>
-              </tr>
-              <tr>
-                <th>Tomorrow</th>
-                <td>You may still be carrying it.</td>
-                <td>The list is still there.</td>
-                <td>The day is already filled.</td>
-                <td>Empty, unless you add it again.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="note">A notes app, a stack of browser tabs, or a paper pile can hold tasks. They do not answer which one is the interruption, and they do not put you back. Getting Things Done has the same first move — get it out of your head — and then asks for projects, contexts, and a weekly review. mm stops at the three places above.</p>
-
-        <h2 id="why">Why the shape is this</h2>
-        <p>mm does not measure your focus, and it will not concentrate for you. It takes away two jobs your attention is bad at: holding a list, and choosing from that list while you are trying to work.</p>
-        <div class="why">
-          <article>
-            <p class="kicker">Working memory</p>
-            <h3>A few items, then it spills.</h3>
-            <p>People can keep about four chunks in mind at once. A task list is already too big for that. Nelson Cowan’s review of short-term memory put the limit near four, not the older “seven things” story. The queue is a place outside that limit.</p>
-          </article>
-          <article>
-            <p class="kicker">Cognitive offloading</p>
-            <h3>Write it down, then stop rehearsing it.</h3>
-            <p>People already move memory into the world: notes, calendars, other people. Evan Risko and Sam Gilbert call that cognitive offloading. <code>mm add</code> is that move. The task is stored, so your attention can stay on the work.</p>
-          </article>
-          <article>
-            <p class="kicker">Attention residue</p>
-            <h3>A switch leaves part of you behind.</h3>
-            <p>Sophie Leroy showed that when you leave a task unfinished, some attention stays on it and the next task suffers. The stack makes the switch explicit. <code>mm done</code> closes the interruption. The queue is the return address, so you are not reconstructing your place from memory.</p>
-          </article>
-          <article>
-            <p class="kicker">Interruptions</p>
-            <h3>Getting back is the expensive part.</h3>
-            <p>Gloria Mark’s studies of office work found that after an interruption, returning to the original task took on the order of 23 minutes. A stack does not make the interruption free. It writes down what you were doing, and shows it again the moment the interruption is done.</p>
-          </article>
-        </div>
-        <p class="note">One popular claim does not belong here. “You remember unfinished tasks better” (the Zeigarnik effect) has not held up as a general rule. A 2025 review found no reliable memory advantage for unfinished work. mm does not depend on that. It depends on the plainer facts above: the list does not fit in your head, writing it down frees attention, and a switch needs a way back.</p>
+        <p class="quiet">You can keep about four things in mind, then the rest spills (Cowan). Writing a task down is how people already free attention (Risko and Gilbert). Leaving one unfinished leaves part of you on it (Leroy), and getting back after a real interruption takes a long time, on the order of twenty minutes in Gloria Mark’s office studies. The box is that place, written down. The old claim that you remember unfinished tasks better has not held up. mm does not depend on it.</p>
+        <p class="quiet">A todo list stores the work and then asks you to choose. A calendar decides when. Notes and tabs can hold an idea, and still don’t tell you what is next or put you back. mm shows one thing, and it never takes the clock. Tomorrow the box is empty unless you add the work again.</p>
 
         <h2 id="install">Install</h2>
-        <p>Python 3.11 or newer. Nothing to pip install.</p>
+        <p>Python 3.11 or newer. Nothing else to install.</p>
         <div class="install-row">
           <pre class="install" id="install">git clone https://github.com/Toseef-Ahmad/mm.git
 cd mm && ./install.sh</pre>
           <button class="btn on-paper" id="copy" type="button">Copy</button>
         </div>
-        <p class="note">That writes <code>~/bin/mm</code> and the manual, <code>man mm</code>. Your list is one file, <code>~/.mm/state.json</code>. If an older mm left toml or habit files behind, delete <code>~/.mm</code> and start empty.</p>
+        <p class="quiet">That puts <code>mm</code> on your path, and <code>man mm</code> beside it. The box is one file, <code>~/.mm/state.json</code>.</p>
 
-        <h2 id="commands">When this happens, type this</h2>
-        <table class="commands">
-          <thead>
-            <tr><th>This happened</th><th>Type</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>A gap opened and the phone is right there</td><td><code>mm</code></td></tr>
-            <tr><td>An idea arrived while you were in the work</td><td><code>mm add "write this up later"</code></td></tr>
-            <tr><td>You thought of the work</td><td><code>mm add "CS302"</code></td></tr>
-            <tr><td>You want the one thing to do</td><td><code>mm</code></td></tr>
-            <tr><td>You finished it</td><td><code>mm done</code></td></tr>
-            <tr><td>Something more important came up</td><td><code>mm add -p "prod is down"</code></td></tr>
-            <tr><td>A small task is nagging you</td><td><code>mm add -q "email Sam"</code></td></tr>
-            <tr><td>You are stuck and should move on</td><td><code>mm block "waiting on CI"</code></td></tr>
-            <tr><td>You want to park it without calling it done</td><td><code>mm suspend</code></td></tr>
-            <tr><td>You are at a checkpoint for the small tasks</td><td><code>mm flush-quick</code></td></tr>
-            <tr><td>You want to see all three places</td><td><code>mm status</code></td></tr>
-            <tr><td>You changed your mind</td><td><code>mm undo</code></td></tr>
-          </tbody>
-        </table>
+        <h2>If this happens</h2>
+        <ul class="where">
+          <li><span>A gap opened</span> <code>mm</code></li>
+          <li><span>An idea arrived</span> <code>mm add "write this up later"</code></li>
+          <li><span>You finished</span> <code>mm done</code></li>
+          <li><span>You’re stuck</span> <code>mm block "waiting"</code></li>
+          <li><span>Park it, still unfinished</span> <code>mm suspend</code></li>
+          <li><span>Time for the small things</span> <code>mm flush-quick</code></li>
+          <li><span>See the whole box</span> <code>mm status</code></li>
+          <li><span>Take it back</span> <code>mm undo</code></li>
+        </ul>
       </div>
     </div>
   </main>
 
-  <footer class="wrap foot">mm 3.0 · MIT · nothing is added unless you type it</footer>
-  <script src="/play.js?v=3"></script>
+  <footer class="wrap foot">mm · the box is empty until you type</footer>
+  <script src="/play.js?v=4"></script>
 </body>
 </html>

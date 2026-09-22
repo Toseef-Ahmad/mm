@@ -1,6 +1,12 @@
 # mm
 
-mm is a queue for your attention. You put work in it so you are not holding that work in your head. It shows one thing. If something more important comes up, you stack it. That goes first. When you finish it, you are back on the queue.
+mm is a box for what you are not doing yet. Your head is for the work. The box holds the rest.
+
+A gap with nothing in front of you turns into a scroll or the next episode. Put the next piece of work in the queue before that gap. When it opens, `mm` already has the next thing.
+
+An idea during study or deep work has nowhere to sit. `mm add "write this up later"` lines it up behind the work you are in. You stay on that work. When you finish, the idea is next. A tiny nag uses `mm add -q` and stays off the line.
+
+If something more important comes up, `mm add -p` puts it on the stack. Finish it with `mm done` and you are back.
 
 Nothing appears unless you type `mm add`. Tomorrow the item is gone unless you add it again. There is no config file, no daily seed, no habits, and no calendar.
 
