@@ -330,22 +330,26 @@ code {
 
 .story code { justify-self: end; }
 
-.places, .why {
+.places, .why, .moments {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
   margin-top: 16px;
 }
 
+.moments { grid-template-columns: 1fr 1fr; }
+
+.moments code { display: block; margin-top: 8px; }
+
 .why { grid-template-columns: 1fr 1fr; }
 
-.places article, .why article {
+.places article, .why article, .moments article {
   border-top: 1px solid var(--ink);
   padding-top: 12px;
   min-width: 0;
 }
 
-.places p, .why p { margin: 0 0 8px; }
+.places p, .why p, .moments p { margin: 0 0 8px; }
 .why .kicker { margin-bottom: 8px; }
 
 .places code, .why code { overflow-wrap: anywhere; }
@@ -468,7 +472,7 @@ code {
 }
 
 @media (max-width: 800px) {
-  .stage, .ritual, .glance, .places, .why { grid-template-columns: minmax(0, 1fr); }
+  .stage, .ritual, .glance, .places, .why, .moments { grid-template-columns: minmax(0, 1fr); }
   .story li { grid-template-columns: auto minmax(0, 1fr); }
   .story code { grid-column: 2; }
   .story code { justify-self: start; }

@@ -5,6 +5,7 @@ Notable changes per release. Dates are release dates, newest first.
 ## Unreleased
 
 - The landing page is a guide: one afternoon, the three places, and how a queue differs from holding work in your head, a todo list, or a calendar.
+- The guide names the two losses: a gap that becomes a scroll, and an idea that arrives in the middle of the work.
 
 ## 3.0.0 — 2026-09-09
 

@@ -21,6 +21,7 @@
   <header class="wrap top">
     <a class="mark" href="/">mm</a>
     <nav>
+      <a href="#moments">Gaps</a>
       <a href="#example">Example</a>
       <a href="#compare">Compare</a>
       <a href="#why">Why</a>
@@ -74,6 +75,23 @@
 
     <div class="sheet">
       <div class="wrap">
+        <h2 id="moments">Two times you lose the thread</h2>
+        <div class="moments">
+          <article>
+            <p class="kicker">A gap</p>
+            <h3>The empty minute fills itself.</h3>
+            <p>You finish a piece, or you are waiting. Nothing is in front of you. A feed or another episode starts on its own, and the hour goes. Put the next real thing in the queue before that minute arrives. When the gap opens, <code>mm</code> already has it. You do the next piece of work.</p>
+            <code>mm</code>
+          </article>
+          <article>
+            <p class="kicker">An idea</p>
+            <h3>It shows up in the middle of the work.</h3>
+            <p>You are studying, or deep in something. An idea arrives. An hour later, another thing to do after this. Add it. It lines up behind the work you are in. Ask again and you are still on that work. When you finish, the idea is next. A tiny one can wait off the line.</p>
+            <code>mm add "write this up later"</code>
+            <code>mm add -q "email Sam"</code>
+          </article>
+        </div>
+
         <h2 id="example">One afternoon</h2>
         <p>Same three tasks the whole way down. Nothing else appears.</p>
         <ol class="story">
@@ -162,6 +180,20 @@
                 <td>You stack it. Finish it. You are back.</td>
               </tr>
               <tr>
+                <th>A gap in the work</th>
+                <td>The phone is the easiest thing in the room.</td>
+                <td>You open the list and negotiate with it.</td>
+                <td>The block ended, so you wander.</td>
+                <td>The next thing is already chosen. Type <code>mm</code>.</td>
+              </tr>
+              <tr>
+                <th>An idea while you work</th>
+                <td>You hold it, or you chase it and lose the work.</td>
+                <td>You switch apps and start organizing it.</td>
+                <td>You stop to schedule it.</td>
+                <td>You add it behind the current work and stay there.</td>
+              </tr>
+              <tr>
                 <th>A two-minute nag</th>
                 <td>It keeps tapping you.</td>
                 <td>It sits next to the real work, and often wins.</td>
@@ -221,6 +253,8 @@ cd mm && ./install.sh</pre>
             <tr><th>This happened</th><th>Type</th></tr>
           </thead>
           <tbody>
+            <tr><td>A gap opened and the phone is right there</td><td><code>mm</code></td></tr>
+            <tr><td>An idea arrived while you were in the work</td><td><code>mm add "write this up later"</code></td></tr>
             <tr><td>You thought of the work</td><td><code>mm add "CS302"</code></td></tr>
             <tr><td>You want the one thing to do</td><td><code>mm</code></td></tr>
             <tr><td>You finished it</td><td><code>mm done</code></td></tr>

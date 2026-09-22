@@ -4,6 +4,11 @@ mm is a queue for your attention. You put work in it so you are not holding that
 
 Nothing appears unless you type `mm add`. Tomorrow the item is gone unless you add it again. There is no config file, no daily seed, no habits, and no calendar.
 
+## Two times it helps
+
+- A gap in the work. The empty minute is when a feed or another episode takes the hour, because they start without a decision. Put the next real thing in the queue first. When the gap opens, `mm` already has it.
+- An idea during deep work or study. Add it with `mm add`. It waits behind the work you are in. You stay on that work. When you finish, the idea is next. A tiny nag can go to quick with `mm add -q` so it does not join the line.
+
 ## The three places
 
 - queue — the line of real work. `mm add "task"`. First added, first done.

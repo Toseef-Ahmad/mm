@@ -11,7 +11,9 @@ A terminal queue for your attention. Put the work in the queue so you are
 not holding it in your head. `mm` shows one task. If something more
 important comes up, `mm add -p` stacks it; when you `mm done`, you are
 back on the queue. Small nags go to quick (`mm add -q`) and do not jump
-the line.
+the line. A gap in the work is when a feed takes the hour: `mm` already
+has the next thing. An idea during the work goes behind it with
+`mm add`, and you stay on what you were doing.
 
 If you want CS302 today, you type `mm add "CS302"`. Tomorrow it is not
 there unless you add it again.
