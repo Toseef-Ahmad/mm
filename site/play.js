@@ -82,6 +82,8 @@
   var replay = document.getElementById("replay");
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var timer = null;
+  var runId = 0;
+  var HOLD = 1900;
 
   function line(parent, cls, text) {
     var span = document.createElement("span");
@@ -119,13 +121,13 @@
     timer = null;
   }
 
-  function wait(ms) {
+  function wait(ms, mine) {
     return new Promise(function (resolve) {
-      timer = setTimeout(resolve, reduce ? 0 : ms);
+      timer = setTimeout(function () { resolve(mine === runId); }, ms);
     });
   }
 
-  function typeCmd(cmd) {
+  function typeCmd(cmd, mine) {
     var holder = document.createElement("span");
     screen.appendChild(holder);
     var prompt = document.createElement("span");
@@ -134,45 +136,49 @@
     holder.appendChild(prompt);
     var typed = document.createElement("span");
     holder.appendChild(typed);
+
+    if (reduce) {
+      typed.textContent = cmd + "\n";
+      return Promise.resolve();
+    }
+
     var caret = document.createElement("span");
     caret.className = "caret";
     caret.setAttribute("aria-hidden", "true");
     holder.appendChild(caret);
 
-    if (reduce) {
-      typed.textContent = cmd;
-      caret.remove();
-      holder.appendChild(document.createTextNode("\n"));
-      return Promise.resolve();
-    }
-
     var i = 0;
     return new Promise(function (resolve) {
       (function tick() {
+        if (mine !== runId) { resolve(false); return; }
         typed.textContent = cmd.slice(0, i);
         if (i >= cmd.length) {
           caret.remove();
           holder.appendChild(document.createTextNode("\n"));
-          resolve();
+          resolve(true);
           return;
         }
         i += 1;
-        timer = setTimeout(tick, 28);
+        timer = setTimeout(tick, 42);
       })();
     });
   }
 
   async function play() {
+    var mine = ++runId;
     stop();
     screen.replaceChildren();
     renderTrays(empty);
     var beat0 = document.getElementById("beat");
     if (beat0) beat0.textContent = "Nothing is in the box until you type it.";
     replay.disabled = true;
+    replay.textContent = "Playing…";
+    if (!(await wait(500, mine))) return;
     for (var n = 0; n < steps.length; n += 1) {
+      if (mine !== runId) return;
       var step = steps[n];
-      await typeCmd(step.cmd);
-      await wait(180);
+      if (!(await typeCmd(step.cmd, mine))) return;
+      if (!(await wait(320, mine))) return;
       step.out.forEach(function (row) {
         line(screen, row.k, row.t);
       });
@@ -180,17 +186,21 @@
       var beat = document.getElementById("beat");
       if (beat && step.say) beat.textContent = step.say;
       screen.parentElement.scrollTop = screen.parentElement.scrollHeight;
-      await wait(700);
+      if (!(await wait(HOLD, mine))) return;
     }
-    var caret = document.createElement("span");
-    caret.className = "caret";
-    caret.setAttribute("aria-hidden", "true");
-    var prompt = document.createElement("span");
-    prompt.className = "dim";
-    prompt.textContent = "$ ";
-    screen.appendChild(prompt);
-    screen.appendChild(caret);
+    if (mine !== runId) return;
+    var promptEnd = document.createElement("span");
+    promptEnd.className = "dim";
+    promptEnd.textContent = "$ ";
+    screen.appendChild(promptEnd);
+    if (!reduce) {
+      var caret = document.createElement("span");
+      caret.className = "caret";
+      caret.setAttribute("aria-hidden", "true");
+      screen.appendChild(caret);
+    }
     replay.disabled = false;
+    replay.textContent = "Play again";
   }
 
   replay.addEventListener("click", function () {
@@ -211,5 +221,21 @@
     done();
   });
 
-  play();
+  var started = false;
+  function startOnce() {
+    if (started) return;
+    started = true;
+    play();
+  }
+  if ("IntersectionObserver" in window) {
+    var watch = new IntersectionObserver(function (entries) {
+      if (entries.some(function (entry) { return entry.isIntersecting; })) {
+        watch.disconnect();
+        startOnce();
+      }
+    }, { threshold: 0.4 });
+    watch.observe(screen.closest(".term") || screen);
+  } else {
+    startOnce();
+  }
 })();
