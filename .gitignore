@@ -7,9 +7,5 @@ dist/
 build/
 *.corrupt-*
 .state-*.tmp
-.rules-*.tmp
-.books-*.tmp
-.books-config-*.tmp
 web/
 node_modules/
-site/.vercel/

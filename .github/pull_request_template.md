@@ -2,10 +2,6 @@
 
 <!-- The decision it removes, or the wrong state it prevents. -->
 
-## Why the habit model could not already say it
-
-<!-- Skip for bug fixes. Required for new commands or flags. -->
-
 ## Checklist
 
 - [ ] `python3 -m unittest discover -s tests -v` is green

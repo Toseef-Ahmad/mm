@@ -1,4 +1,4 @@
-"""Time, color, lock — the boring primitives everything else shares."""
+"""Time, color, lock."""
 import os
 import sys
 from datetime import datetime, timezone
@@ -10,8 +10,6 @@ try:
     HAVE_FCNTL = True
 except ImportError:
     HAVE_FCNTL = False
-
-WEEKDAY_KEYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 _COLOR = sys.stdout.isatty() and not os.environ.get("NO_COLOR") and os.environ.get("TERM") != "dumb"
 
@@ -35,15 +33,7 @@ def today_str():
     return datetime.now(timezone.utc).astimezone().date().isoformat()
 
 
-def today_weekday_key():
-    """Locale-independent weekday key. strftime('%a') follows LC_TIME and
-    silently returns non-English abbreviations — weekday tracks would vanish
-    with no error. This never depends on locale."""
-    return WEEKDAY_KEYS[datetime.now().weekday()]
-
-
 class Lock:
-    """Advisory file lock so two terminals never corrupt state.json together."""
     def __enter__(self):
         P.ensure()
         self.fh = open(P.lock, "w")

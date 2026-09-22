@@ -1,7 +1,8 @@
-"""Queue/stack/quick persistence. One JSON file, atomic writes, quiet recovery."""
+"""One file: ~/.mm/state.json. Atomic writes, quiet recovery."""
 import copy
 import json
 import os
+import sys
 import tempfile
 from datetime import datetime
 
@@ -9,17 +10,15 @@ from .paths import P
 from .util import now_iso
 
 EMPTY_STATE = {
-    "queue": [], "stack": [], "quick": [], "backlog": [], "log": [], "next_id": 1, "active": None,
-    "archive": [], "sessions": [], "_snapshots": [], "onboarded_date": None,
-    "gate_days": [],
+    "queue": [], "stack": [], "quick": [],
+    "log": [], "next_id": 1, "active": None,
+    "archive": [], "_snapshots": [],
 }
 
 
 def load():
     P.ensure()
-    if not os.path.exists(P.state):
-        return copy.deepcopy(EMPTY_STATE)
-    if os.path.getsize(P.state) == 0:
+    if not os.path.exists(P.state) or os.path.getsize(P.state) == 0:
         return copy.deepcopy(EMPTY_STATE)
     try:
         with open(P.state) as f:
@@ -33,7 +32,8 @@ def load():
             os.replace(P.state, backup)
         except OSError:
             pass
-        print(f"⚠️  State file was corrupted ({e}). Backed up to {backup}. Starting fresh.", file=__import__("sys").stderr)
+        print(f"⚠️  State file was corrupted ({e}). Backed up to {backup}. Starting fresh.",
+              file=sys.stderr)
         return copy.deepcopy(EMPTY_STATE)
 
 

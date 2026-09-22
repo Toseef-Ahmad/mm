@@ -8,8 +8,6 @@ on:
 
 jobs:
   test:
-    # mm claims stdlib-only and Python 3.11+. This matrix is what makes that claim
-    # checkable rather than aspirational.
     strategy:
       fail-fast: false
       matrix:
@@ -29,8 +27,7 @@ jobs:
       - name: No third-party imports crept in
         shell: bash
         run: |
-          # A clean interpreter with no site-packages must still import mm.
-          python -S -c "import mm.cli, mm.ops, mm.habits, mm.obsidian, mm.books; print('stdlib-only ok')"
+          python -S -c "import mm.cli, mm.ops; print('stdlib-only ok')"
 
       - name: Install as a package and drive it end to end
         shell: bash
@@ -38,46 +35,21 @@ jobs:
           python -m pip install --quiet .
           export MM_HOME="$(mktemp -d)"
           mm --version
-          mm init
-          test -f "$MM_HOME/mm.toml"
-          mm rules validate
           mm status
           mm add "smoke test task"
-          mm done          # closes whatever the pointer offers
+          mm done
           mm undo
           mm stats
           mm export > /dev/null
 
-      - name: Landing page demo still matches the CLI
-        # The page at mm.tafil.app shows real captured output. If a command is
-        # renamed or dropped, the recording becomes a lie about the tool — so
-        # the capture is re-run here and its shape compared with what shipped.
-        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
-        run: python3 site/tools/capture.py --check
-
-      - name: Plain-text docs are in step with the docs page
-        # llms-full.txt is what AI crawlers read. It is generated from docs.html,
-        # so a hand-edit of one and not the other would quietly ship two
-        # different manuals.
-        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
-        shell: bash
-        run: |
-          python3 site/tools/make-llms-full.py
-          git diff --exit-code -- site/llms-full.txt || {
-            echo "::error::site/llms-full.txt is stale — run python3 site/tools/make-llms-full.py"
-            exit 1
-          }
-
-      - name: Manual and starter config ship in the wheel
+      - name: Manual ships in the wheel
         shell: bash
         run: |
           python - <<'PY'
           import pathlib
           import mm
-          data = pathlib.Path(mm.__file__).parent / "data"
-          for name in ("mm.1", "mm.toml"):
-              path = data / name
-              assert path.is_file(), f"{name} missing from the installed package"
-              assert path.read_text(encoding="utf-8").strip(), f"{name} is empty"
+          page = pathlib.Path(mm.__file__).parent / "data" / "mm.1"
+          assert page.is_file(), "mm.1 missing from the installed package"
+          assert page.read_text(encoding="utf-8").strip(), "mm.1 is empty"
           print("packaged data ok")
           PY

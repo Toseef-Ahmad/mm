@@ -1,14 +1,13 @@
 [project]
 name = "mm-focus"
 dynamic = ["version"]  # single source: mm/__init__.py
-description = "Decide what's next. Never when. A CLI focus engine with queues, interrupts, and gates."
+description = "A runtime queue: add work, do the next thing, mark it done. Nothing repeats."
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [{name = "Toseef Ahmad"}]
 keywords = [
-  "cli", "focus", "productivity", "queue", "gtd", "habits",
-  "habit-tracker", "obsidian", "terminal", "todo", "streaks",
+  "cli", "focus", "productivity", "queue", "terminal", "todo",
 ]
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -46,6 +45,4 @@ version = {attr = "mm.__version__"}
 include = ["mm*"]
 
 [tool.setuptools.package-data]
-# The manual and the annotated config ship with the wheel, so `mm help` and
-# `mm init` behave the same whether you pip-installed or cloned.
-mm = ["data/mm.1", "data/mm.toml"]
+mm = ["data/mm.1"]

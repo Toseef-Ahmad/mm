@@ -18,4 +18,4 @@ rm -f "$HOME/.local/share/man/man1/mm.1.gz" 2>/dev/null || true
 echo "installed $HOME/bin/mm -> $ROOT"
 echo "installed $HOME/.local/share/man/man1/mm.1"
 echo "try:  man mm"
-echo "next: mm init   (if you don't have ~/.mm/mm.toml yet)"
+echo "next: mm add \"…\""

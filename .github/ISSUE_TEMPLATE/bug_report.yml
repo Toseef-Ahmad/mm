@@ -25,8 +25,7 @@ body:
     attributes:
       label: Steps to reproduce
       description: >
-        Sequence matters more than anything else in mm. The bugs worth fixing are
-        usually "do A, then B, and B undoes A" — so list the commands in order.
+        Sequence matters. List the commands in order.
     validations:
       required: true
 
@@ -48,14 +47,6 @@ body:
     attributes:
       label: Relevant state (optional)
       description: >
-        For habit or Obsidian issues, `mm export` and the matching entry from
-        `~/.mm/habits.json` turn a guess into a fix. Redact task names freely —
-        the shape of the data is what matters.
+        `mm export` and the shape of `~/.mm/state.json` help more than a
+        paraphrase. Redact task names freely.
       render: json
-
-  - type: checkboxes
-    id: obsidian
-    attributes:
-      label: Obsidian sync
-      options:
-        - label: This involves the Obsidian daily-note sync

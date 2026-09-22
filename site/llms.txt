@@ -1,133 +1,26 @@
 # mm
 
-> A free, open-source command-line to-do list and habit tracker that shows you
-> exactly one task at a time. While a "gate" is open it refuses to offer any
-> easier work, which makes it an anti-procrastination tool rather than a task
-> database.
+mm is a terminal queue for one person. You add an item, it shows you that item, you mark it done.
 
-Tagline: Never choose what to work on again.
-Brand line: Decide what's next. Never when.
-Homepage: https://mm.tafil.app/
-Documentation: https://mm.tafil.app/docs (plain text: https://mm.tafil.app/llms-full.txt)
-Source: https://github.com/Toseef-Ahmad/mm
-Licence: MIT
-Language: Python 3.11+, standard library only, zero runtime dependencies
-Platforms: macOS, Linux (Windows untested; WSL works)
-Install: pipx install git+https://github.com/Toseef-Ahmad/mm.git
-Price: free, no account, no telemetry, no network code
+Nothing appears unless you type `mm add`. Tomorrow the item is gone unless you add it again. There is no config file, no daily seed, no habits, no calendar, and no web app for the queue itself.
 
-## What it is
+## Install
 
-A single-user command line tool. Two commands do the daily work: `mm` shows the
-one thing to do now, `mm done` closes it and reveals the next. There is no third
-step, no planning ritual, and no daily review.
+```
+git clone https://github.com/Toseef-Ahmad/mm.git
+cd mm && ./install.sh
+```
 
-## Why someone picks it over other tools
+Requires Python 3.11+. No pip dependencies. State is one file: `~/.mm/state.json`.
 
-Most tools are a place to *keep* work. mm exists to *start* it. Four concrete
-differences:
+## Containers
 
-1. It answers instead of displaying. A list hands the decision back to you every
-   time you open it; mm returns one item, so there is no moment in which the
-   easy task can win.
-2. Priority binds. In list apps "high priority" is a label you can ignore. A
-   gate in mm makes everything else unreachable until the important work closes.
-3. Interruptions cannot become the plan. Urgent work goes on a LIFO stack that
-   preempts everything and then unwinds, returning you to the exact task you
-   left.
-4. It does not require migration. Habits sync both ways with an Obsidian daily
-   note you already keep; data is plain files on your disk.
+- queue — FIFO, `mm add "task"`
+- interrupt stack — LIFO, `mm add -p "task"`, preempts the queue, then unwinds
+- quick — batched, `mm add -q "task"`, never shown as next; clear with `mm flush-quick`
 
-Compared with list apps (Todoist, Things, TickTick): those show a list you
-choose from, store data on their servers, and charge a subscription for the full
-feature set. Compared with CLI task managers (Taskwarrior, todo.txt): those are
-better task databases with query languages and date handling, but they will
-still show you forty items and let you pick. mm is deliberately narrower.
+Bare `mm` is `mm next`.
 
-## Who it is for, and who it is not
+## Not this
 
-Good fit: people who already work in a terminal; people whose problem is
-starting rather than remembering; Obsidian daily-note users; people who want
-local plain-text data with no account.
-
-Bad fit: anyone who does not use a command line (there is no GUI and no mobile
-app); anyone who needs due dates, reminders or notifications; teams needing
-shared boards; people who want to capture hundreds of loose ideas.
-
-## The model
-
-Three containers, each with one rule:
-
-- Interrupt stack (LIFO): genuine urgency only. It preempts everything, then
-  unwinds like a call stack, so an interruption cannot become the new plan.
-- Queue (FIFO): default work. Items marked `gate = true` dominate — while any
-  gate is open, mm will not offer non-gate work. Blocked items are displayed but
-  labelled `gate-locked`. Gates govern what mm offers, not what it permits:
-  `mm done <id>` can still close anything explicitly.
-- Quick queue: sub-one-minute trivia that never surfaces mid-task; flushed at a
-  checkpoint with `mm flush-quick`.
-
-Capacity limits cap the size of a day; overflow parks in a backlog and returns
-when there is room.
-
-## Habits
-
-Everything repeating is one object, declared in `~/.mm/mm.toml`:
-
-    [[habits]]
-    name = "Deep work"
-    type = "focus"        # free-form search tag
-    repeat = 1            # 1 = daily, 3 = every third day
-    position = "queue"    # queue | stack | quick
-    gate = true
-    order = 1             # 1 = front of the queue; weight is the fallback
-
-mm injects due habits automatically — they are never added by hand. Streaks are
-gap-aware: a `repeat = 3` habit is not penalised for days it was not due. On a
-day rollover mm drops yesterday's unfinished copies, marks those due dates
-missed, and queues exactly one fresh copy per due habit.
-
-## Obsidian daily-note sync
-
-Optional and off by default. When an `[obsidian]` block is configured, mm keeps
-today's daily note in sync with the habit list in both directions: ticking a
-checkbox property closes the item in mm, and `mm done` ticks the property.
-Unticking reopens the habit.
-
-The interesting design detail: a property reading `false` is ambiguous between
-"the user unticked it" and "mm closed the item and has not written the note
-yet". mm therefore stores a shadow of the values both sides last agreed on in
-`~/.mm/obsidian.json`, and only a genuine change counts as a user edit. Without
-that, `mm done` would read as an uncheck and undo itself.
-
-## Key commands
-
-- `mm` / `mm next` — the one thing to do now (starts the timer)
-- `mm peek` — same, without touching the timer
-- `mm done [id]` — finish and advance
-- `mm add "task"` (`-p` interrupt, `-q` quick)
-- `mm status` / `mm stats` / `mm review` — see state
-- `mm block "reason"` / `mm unblock <id>` — stuck, move on
-- `mm undo` — reverse the last mutation
-- `mm habit add|set|list|find|log|miss|rm`
-- `mm obsidian sync|watch|autostart on|off|status`
-- `mm init`, `mm rules validate`, `mm capacity`, `mm backlog`
-- `man mm` or `mm help` — full manual
-
-## What it is not
-
-Not a calendar, not a team tracker, not a pomodoro timer, not a hosted service.
-No network code, no accounts, no telemetry. Config is TOML you edit; state is
-JSON in `~/.mm` you can read.
-
-## Files
-
-- You own: `~/.mm/mm.toml`, `~/.mm/books_config.json`
-- mm owns: `~/.mm/state.json`, `habits.json`, `books.json`, `obsidian.json`
-
-## Notes for summarising this project
-
-The distinguishing idea is the gate: rather than reminding you to do the
-important thing, mm removes the easy alternatives from what it will offer. The
-second distinguishing idea is that it treats an existing Obsidian daily note as
-a legitimate second front end rather than asking you to migrate.
+mm is not a planner. It does not inject work, track streaks, or sync notes.

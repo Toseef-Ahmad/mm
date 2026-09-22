@@ -2,6 +2,31 @@
 
 Notable changes per release. Dates are release dates, newest first.
 
+## 3.0.0 — 2026-09-09
+
+Breaking reset: mm is a runtime box again. You add work when you want it.
+Nothing appears unless you typed `mm add`. Tomorrow it is not there unless
+you add it again.
+
+### Removed
+
+- `mm onboard`, `mm reset`, `mm init`, `mm rules *`
+- `mm.toml`, `mm.rules.json`, books, habits, tracks, rotation, weekday tables
+- Auto-inject of any kind (daily books, habits, weekends, streaks, rewards)
+- Obsidian sync, landing `site/`, webapp
+- Gates, capacity, backlog, sessions
+
+### Kept
+
+- Three containers: queue (FIFO), interrupt stack (LIFO), quick (batched)
+- Runtime verbs: add, next/peek, done, block/unblock, suspend/resume, move,
+  rm, edit, note, find, undo, status, stats, flush-quick, archive, export, log
+- One file: `~/.mm/state.json`. File lock, atomic save, undo snapshots.
+  Zero pip deps.
+- Landing page at [mm.tafil.app](https://mm.tafil.app/) describes this version only.
+
+No migrator. Wipe `~/.mm` yourself if you still have the old files.
+
 ## 2.1.0 — 2026-08-19
 
 ### Added
