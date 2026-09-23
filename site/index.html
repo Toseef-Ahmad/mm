@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>mm — your head is for the work</title>
-  <meta name="description" content="mm is a box for what you are not doing yet. A gap becomes a scroll when nothing is next. An idea during the work needs a place behind it. You add it. mm shows one thing.">
+  <meta name="description" content="mm is a box for what you are not doing yet. A gap becomes a scroll when nothing is next. An idea during the work waits behind it. mm shows one thing.">
   <link rel="canonical" href="https://mm.tafil.app/">
   <meta property="og:title" content="mm — your head is for the work">
   <meta property="og:description" content="The box holds the rest. A gap already has a next thing. An idea during the work waits behind it.">
@@ -14,97 +14,418 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body>
-  <header class="wrap top">
-    <a class="mark" href="/">mm</a>
-    <nav>
-      <a href="#install">Install</a>
-      <a href="https://github.com/Toseef-Ahmad/mm">GitHub</a>
-    </nav>
+<body class="bg-surface font-body-md text-body-md text-on-surface antialiased selection:bg-secondary-container selection:text-white">
+  <header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-md border-b border-outline-variant">
+    <div class="max-w-7xl mx-auto px-margin flex flex-wrap items-center justify-between gap-x-gutter gap-y-space-sm py-3">
+      <a class="flex items-center gap-space-sm shrink-0" href="#philosophy">
+        <span class="font-label-caps text-label-caps px-space-xs py-0.5 bg-surface-container-high border border-outline-variant text-secondary">mm</span>
+        <span class="hidden md:inline text-on-surface-variant font-mono-sm text-mono-sm tracking-tight border-l border-outline-variant pl-space-sm">your head is for the work, the box holds the rest</span>
+      </a>
+      <nav class="order-3 lg:order-none w-full lg:w-auto flex items-center gap-space-lg overflow-x-auto text-body-sm font-body-sm" aria-label="Page">
+        <a class="text-on-surface-variant hover:text-on-surface py-space-sm whitespace-nowrap" href="#philosophy">Philosophy</a>
+        <a class="text-on-surface-variant hover:text-on-surface py-space-sm whitespace-nowrap" href="#simulation">Simulation</a>
+        <a class="text-on-surface-variant hover:text-on-surface py-space-sm whitespace-nowrap" href="#containers">The 3 places</a>
+        <a class="text-on-surface-variant hover:text-on-surface py-space-sm whitespace-nowrap" href="#science">Science</a>
+        <a class="text-on-surface-variant hover:text-on-surface py-space-sm whitespace-nowrap" href="#comparison">Comparison</a>
+        <a class="text-on-surface-variant hover:text-on-surface py-space-sm whitespace-nowrap" href="#install">Install</a>
+      </nav>
+      <a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary" href="https://github.com/Toseef-Ahmad/mm">GitHub</a>
+    </div>
   </header>
 
-  <main>
-    <section class="wrap hero">
-      <h1>Your head is for the work.<br>The box holds the rest.</h1>
-      <p class="lead">A gap with nothing in front of you turns into a scroll, or the next episode. An idea in the middle of study has nowhere to sit, so it tugs at you, or you lose it an hour later. You put both in the box. mm shows one thing.</p>
-      <p class="now" id="beat">You’re about to study. Put it in the box, so your head can do the studying.</p>
-
-      <div class="stage">
-        <div class="term">
-          <div class="term-bar"><span>mm</span><span>one thing at a time</span></div>
-          <div class="screen" id="screen" aria-live="polite"></div>
-          <button class="btn" id="replay" type="button">See it again</button>
+  <main class="w-full pt-28 lg:pt-20 bg-surface">
+    <section class="w-full border-b border-outline-variant py-space-2xl bg-surface scroll-mt-28" id="philosophy">
+      <div class="max-w-7xl mx-auto px-margin">
+        <div class="flex items-center gap-space-sm mb-space-md font-label-caps text-label-caps text-secondary uppercase tracking-widest">
+          <span class="w-2 h-2 rounded-full bg-secondary inline-block"></span>
+          <span>one thing in front of you</span>
         </div>
-        <div class="trays" aria-label="The box">
-          <section class="tray">
-            <header>stack <span>on top, until it’s done</span></header>
-            <div id="tray-interrupt"></div>
-          </section>
-          <section class="tray">
-            <header>queue <span>the line of work</span></header>
-            <div id="tray-queue"></div>
-          </section>
-          <section class="tray">
-            <header>quick <span>the nag, off the line</span></header>
-            <div id="tray-quick"></div>
-          </section>
+        <h1 class="font-display text-headline-lg sm:text-display text-primary max-w-4xl tracking-tight mb-space-lg">
+          Your head is for the work, the box holds the rest.
+        </h1>
+        <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-space-xl">
+          A gap with nothing queued turns into a scroll, or the next episode, because the feed starts without asking you to decide. An idea in the middle of study has nowhere to sit, so it tugs at you, or you lose it an hour later. You put both in the box. mm shows one thing.
+        </p>
+        <div class="flex flex-col sm:flex-row sm:items-center gap-space-md mb-space-2xl max-w-3xl">
+          <div class="flex items-center justify-between gap-space-md bg-surface-container-lowest border border-outline-variant px-space-md py-space-sm rounded flex-1 min-w-0">
+            <div class="flex items-center gap-space-sm font-mono-md text-mono-md min-w-0">
+              <span class="text-secondary select-none font-semibold shrink-0">$</span>
+              <span class="text-on-surface break-all" id="install-cmd">git clone https://github.com/Toseef-Ahmad/mm.git && cd mm && ./install.sh</span>
+            </div>
+            <button class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary shrink-0" id="copy-install" type="button">COPY</button>
+          </div>
+          <p class="font-mono-sm text-mono-sm text-outline shrink-0">Python 3.11+. No pip packages.</p>
+        </div>
+
+        <div class="w-full bg-surface-container-lowest border border-outline-variant rounded overflow-hidden scroll-mt-28" id="simulation">
+          <div class="bg-surface-container-low border-b border-outline-variant px-space-md py-space-sm flex flex-wrap items-center justify-between gap-space-md">
+            <span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">One afternoon</span>
+            <div class="flex items-center gap-space-md">
+              <span class="font-mono-sm text-mono-sm text-secondary font-medium" id="sim-step">STEP 1 OF 7</span>
+              <button class="font-mono-sm text-mono-sm px-space-sm py-0.5 bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-on-surface" id="sim-toggle" type="button">PAUSE</button>
+              <button class="font-mono-sm text-mono-sm px-space-sm py-0.5 bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-on-surface" id="sim-replay" type="button">REPLAY</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-12 min-h-[360px]">
+            <div class="lg:col-span-7 p-space-lg flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-outline-variant font-mono-md text-mono-md">
+              <div class="space-y-space-md" id="sim-terminal-log" aria-live="polite">
+                <div class="flex items-start gap-space-sm text-outline">
+                  <span class="text-secondary select-none font-semibold">$</span>
+                  <span class="text-primary font-medium" id="sim-command"></span>
+                </div>
+                <div id="sim-response"></div>
+              </div>
+              <p class="mt-space-lg pt-space-sm border-t border-outline-variant/30 flex items-start gap-space-xs text-on-surface-variant font-body-md text-body-md">
+                <span class="text-secondary shrink-0" aria-hidden="true">●</span>
+                <span id="sim-explanation"></span>
+              </p>
+            </div>
+            <div class="lg:col-span-5 p-space-lg bg-surface-container-low flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-space-md border-b border-outline-variant pb-space-xs">
+                  <span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">The box</span>
+                  <span class="font-mono-sm text-mono-sm text-outline">~/.mm/state.json</span>
+                </div>
+                <div class="mb-space-lg">
+                  <div class="flex items-center justify-between text-mono-sm font-mono-sm text-outline mb-space-xs">
+                    <span>Now</span>
+                    <span class="text-secondary font-label-caps text-label-caps uppercase" id="state-now-badge">QUEUE</span>
+                  </div>
+                  <div class="p-space-md bg-surface-container border border-outline-variant text-primary font-mono-md text-mono-md flex items-start gap-space-sm" id="state-now-card">
+                    <span class="text-secondary select-none">→</span>
+                    <span id="state-now-text">CS302</span>
+                  </div>
+                </div>
+                <div class="space-y-space-sm">
+                  <div class="p-space-sm bg-surface-container-lowest border border-outline-variant" id="state-intr-box">
+                    <div class="flex items-center justify-between font-mono-sm text-mono-sm text-outline mb-1">
+                      <span><span class="text-secondary font-semibold">!</span> stack</span>
+                      <span id="state-intr-count">0 items</span>
+                    </div>
+                    <div class="font-mono-sm text-mono-sm" id="state-intr-list"></div>
+                  </div>
+                  <div class="p-space-sm bg-surface-container-lowest border border-outline-variant">
+                    <div class="flex items-center justify-between font-mono-sm text-mono-sm text-outline mb-1">
+                      <span>queue</span>
+                      <span id="state-queue-count">1 item</span>
+                    </div>
+                    <div class="font-mono-sm text-mono-sm space-y-1" id="state-queue-list"></div>
+                  </div>
+                  <div class="p-space-sm bg-surface-container-lowest border border-outline-variant">
+                    <div class="flex items-center justify-between font-mono-sm text-mono-sm text-outline mb-1">
+                      <span>quick</span>
+                      <span id="state-quick-count">0 items</span>
+                    </div>
+                    <div class="font-mono-sm text-mono-sm" id="state-quick-list"></div>
+                  </div>
+                </div>
+              </div>
+              <p class="font-mono-sm text-mono-sm text-outline border-t border-outline-variant pt-space-sm mt-space-md">
+                One thing is current. You do not scan a list to decide.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <div class="sheet">
-      <div class="wrap">
-        <div class="scenes">
-          <article>
-            <h2>A gap</h2>
-            <p>You finish a problem, or a build is running, and for a minute nothing is in front of you. A feed will take that minute. It starts without asking you to decide.</p>
-            <p>Put the next piece of work in the queue before you need it. When the gap opens, type <code>mm</code>. The next thing is already there.</p>
+    <section class="w-full border-b border-outline-variant py-space-2xl bg-surface-container-low">
+      <div class="max-w-7xl mx-auto px-margin">
+        <div class="mb-space-xl">
+          <span class="font-label-caps text-label-caps text-secondary uppercase tracking-widest block mb-space-xs">Two times you lose the thread</span>
+          <h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary tracking-tight">The gap, and the idea that arrives while you are in it.</h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter mb-space-2xl">
+          <article class="p-space-xl bg-surface border border-outline-variant rounded flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-space-md">
+                <span class="font-mono-md text-mono-md text-secondary">01</span>
+                <span class="font-label-caps text-label-caps text-outline uppercase px-space-xs py-0.5 bg-surface-container-high border border-outline-variant">The gap</span>
+              </div>
+              <h3 class="font-headline-md text-headline-md text-primary mb-space-sm">A gap with nothing queued turns into a scroll or another episode, because the feed starts without asking you to decide.</h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">You finish a piece of work, or a build is running, and for a minute nothing is in front of you. That minute is enough. Put the next piece in the queue before you need it. When the gap opens, type <code class="text-primary font-mono-sm">mm</code>. The next thing is already there.</p>
+            </div>
+            <p class="mt-space-xl pt-space-md border-t border-outline-variant font-mono-sm text-mono-sm text-secondary">mm — the box already has the next thing</p>
           </article>
-          <article>
-            <h2>An idea, while you are in it</h2>
-            <p>You are studying, or deep in the work. An idea arrives. Later, another thing you mean to do after this. Keep it in your head and it pulls. Go do it and the work is gone.</p>
-            <p><code>mm add "write this up later"</code> lines it up behind the work you are in. You stay on that work. When you finish, the idea is next. A tiny one, <code>mm add -q "email Sam"</code>, waits off the line until you want it.</p>
+          <article class="p-space-xl bg-surface border border-outline-variant rounded flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-space-md">
+                <span class="font-mono-md text-mono-md text-secondary">02</span>
+                <span class="font-label-caps text-label-caps text-outline uppercase px-space-xs py-0.5 bg-surface-container-high border border-outline-variant">The idea</span>
+              </div>
+              <h3 class="font-headline-md text-headline-md text-primary mb-space-sm">An idea that shows up mid-work has nowhere to sit, so it either tugs at you until you lose focus, or you lose the idea an hour later.</h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">You are studying, or deep in the work. Keep the idea in your head and it pulls. Go do it and the work is gone. <code class="text-primary font-mono-sm">mm add "write this up later"</code> lines it up behind the work you are in. You stay on that work. When you finish, the idea is next.</p>
+            </div>
+            <p class="mt-space-xl pt-space-md border-t border-outline-variant font-mono-sm text-mono-sm text-secondary">mm add — behind the current work, not instead of it</p>
           </article>
         </div>
-
-        <h2>What goes where</h2>
-        <ul class="where">
-          <li><span>Queue</span> the work you meant to do. First in, first done. <code>mm add "CS302"</code></li>
-          <li><span>Stack</span> something just became more important. Do it, then you are back. <code>mm add -p "prod is down"</code></li>
-          <li><span>Quick</span> a small thing that would nag you or clutter the line. <code>mm add -q "email Sam"</code></li>
-        </ul>
-
-        <p class="quiet">You can keep about four things in mind, then the rest spills (Cowan). Writing a task down is how people already free attention (Risko and Gilbert). Leaving one unfinished leaves part of you on it (Leroy), and getting back after a real interruption takes a long time, on the order of twenty minutes in Gloria Mark’s office studies. The box is that place, written down. The old claim that you remember unfinished tasks better has not held up. mm does not depend on it.</p>
-        <p class="quiet">A todo list stores the work and then asks you to choose. A calendar decides when. Notes and tabs can hold an idea, and still don’t tell you what is next or put you back. mm shows one thing, and it never takes the clock. Tomorrow the box is empty unless you add the work again.</p>
-
-        <h2 id="install">Install</h2>
-        <p>Python 3.11 or newer. Nothing else to install.</p>
-        <div class="install-row">
-          <pre class="install" id="install">git clone https://github.com/Toseef-Ahmad/mm.git
-cd mm && ./install.sh</pre>
-          <button class="btn on-paper" id="copy" type="button">Copy</button>
+        <div class="p-space-lg bg-surface border border-outline-variant rounded">
+          <div class="flex items-center justify-between border-b border-outline-variant pb-space-sm mb-space-md">
+            <span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">After you finish the thing in front of you</span>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-xl">
+            <div class="space-y-space-sm">
+              <span class="font-mono-sm text-mono-sm text-outline block">A list</span>
+              <div class="p-space-sm bg-surface-container-lowest border border-outline-variant font-mono-sm text-mono-sm space-y-2">
+                <div class="text-on-surface-variant">CS302 is done. Now choose again.</div>
+                <div class="p-space-xs bg-surface-container-high border border-outline text-primary">Scan the list. Re-rank it. The phone is easier.</div>
+              </div>
+            </div>
+            <div class="space-y-space-sm">
+              <span class="font-mono-sm text-mono-sm text-secondary block">mm</span>
+              <div class="p-space-sm bg-surface-container-lowest border border-secondary/40 font-mono-sm text-mono-sm space-y-2">
+                <div class="flex items-center justify-between text-on-surface">
+                  <span>$ mm done</span>
+                  <span class="text-secondary">✓ done  1  CS302</span>
+                </div>
+                <div class="p-space-xs bg-surface border border-outline-variant text-primary font-medium">→  2  write this up later   active</div>
+                <div class="text-on-surface-variant">The idea was already next. No new choice.</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <p class="quiet">That puts <code>mm</code> on your path, and <code>man mm</code> beside it. The box is one file, <code>~/.mm/state.json</code>.</p>
-
-        <h2>If this happens</h2>
-        <ul class="where">
-          <li><span>A gap opened</span> <code>mm</code></li>
-          <li><span>An idea arrived</span> <code>mm add "write this up later"</code></li>
-          <li><span>You finished</span> <code>mm done</code></li>
-          <li><span>You’re stuck</span> <code>mm block "waiting"</code></li>
-          <li><span>Park it, still unfinished</span> <code>mm suspend</code></li>
-          <li><span>Time for the small things</span> <code>mm flush-quick</code></li>
-          <li><span>See the whole box</span> <code>mm status</code></li>
-          <li><span>Take it back</span> <code>mm undo</code></li>
-        </ul>
       </div>
-    </div>
+    </section>
+
+    <section class="w-full border-b border-outline-variant py-space-2xl bg-surface scroll-mt-28" id="containers">
+      <div class="max-w-7xl mx-auto px-margin">
+        <div class="mb-space-xl">
+          <span class="font-label-caps text-label-caps text-secondary uppercase tracking-widest block mb-space-xs">What goes where</span>
+          <h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary tracking-tight">Three places. Nothing else.</h2>
+          <p class="font-body-md text-body-md text-on-surface-variant mt-space-xs max-w-2xl">No tags, no dates, no projects, no config. Tomorrow an item is gone unless you add it again.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+          <article class="p-space-lg bg-surface-container-low border border-outline-variant rounded flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-space-md">
+                <span class="font-label-caps text-label-caps text-on-surface-variant">01</span>
+                <span class="font-mono-sm text-mono-sm text-primary bg-surface-container-high px-space-xs py-0.5 border border-outline-variant">the line</span>
+              </div>
+              <h3 class="font-headline-md text-headline-md text-primary mb-space-xs">Queue</h3>
+              <p class="font-mono-sm text-mono-sm text-secondary mb-space-md">First in, first done</p>
+              <p class="font-body-md text-body-md text-on-surface-variant mb-space-md">The work you meant to do. An idea during the work goes at the back. The thing you are on stays the thing you are on.</p>
+              <div class="bg-surface-container-lowest p-space-sm border border-outline-variant font-mono-sm text-mono-sm mb-space-md"><span class="text-secondary">$</span> mm add "CS302"</div>
+            </div>
+            <p class="pt-space-md border-t border-outline-variant font-mono-sm text-mono-sm text-outline">Finish it with <span class="text-on-surface">mm done</span>.</p>
+          </article>
+          <article class="p-space-lg bg-surface-container-low border-2 border-secondary rounded flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-space-md">
+                <span class="font-label-caps text-label-caps text-secondary">02</span>
+                <span class="font-mono-sm text-mono-sm text-on-secondary bg-secondary px-space-xs py-0.5 font-semibold">on top</span>
+              </div>
+              <h3 class="font-headline-md text-headline-md text-primary mb-space-xs">Stack</h3>
+              <p class="font-mono-sm text-mono-sm text-secondary mb-space-md">Last in, first done</p>
+              <p class="font-body-md text-body-md text-on-surface-variant mb-space-md">Something just became more important. It takes the front. When you finish it, you are back on the queue, on the same work.</p>
+              <div class="bg-surface-container-lowest p-space-sm border border-secondary/40 font-mono-sm text-mono-sm mb-space-md"><span class="text-secondary">$</span> mm add -p "prod is down"</div>
+            </div>
+            <p class="pt-space-md border-t border-outline-variant font-mono-sm text-mono-sm text-secondary">mm done returns you.</p>
+          </article>
+          <article class="p-space-lg bg-surface-container-low border border-outline-variant rounded flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-space-md">
+                <span class="font-label-caps text-label-caps text-on-surface-variant">03</span>
+                <span class="font-mono-sm text-mono-sm text-outline bg-surface-container-high px-space-xs py-0.5 border border-outline-variant">off the line</span>
+              </div>
+              <h3 class="font-headline-md text-headline-md text-primary mb-space-xs">Quick</h3>
+              <p class="font-mono-sm text-mono-sm text-on-surface-variant mb-space-md">A small nag</p>
+              <p class="font-body-md text-body-md text-on-surface-variant mb-space-md">Email, a chore, a thing that must not jump the line. <span class="text-on-surface font-mono-sm">mm</span> never shows it as the next thing.</p>
+              <div class="bg-surface-container-lowest p-space-sm border border-outline-variant font-mono-sm text-mono-sm mb-space-md"><span class="text-secondary">$</span> mm add -q "email Sam"</div>
+            </div>
+            <p class="pt-space-md border-t border-outline-variant font-mono-sm text-mono-sm text-outline"><span class="text-on-surface">mm flush-quick</span> deletes them. They are not archived.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="w-full border-b border-outline-variant py-space-2xl bg-surface-container-low scroll-mt-28" id="science">
+      <div class="max-w-7xl mx-auto px-margin">
+        <div class="mb-space-xl">
+          <span class="font-label-caps text-label-caps text-secondary uppercase tracking-widest block mb-space-xs">Why this shape</span>
+          <h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary tracking-tight">The limits are real. The trick is not.</h2>
+          <p class="font-body-md text-body-md text-on-surface-variant mt-space-xs max-w-2xl">mm is built around working memory, the cost of leaving a task, and writing a thing down so you can stay on the work. It does not depend on a memory illusion.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter mb-space-xl">
+          <article class="p-space-lg bg-surface border border-outline-variant rounded flex flex-col justify-between">
+            <div>
+              <span class="font-mono-sm text-mono-sm text-secondary block mb-space-xs">Cowan, 2001</span>
+              <h3 class="font-headline-sm text-headline-sm text-primary mb-space-xs">About four chunks</h3>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Working memory holds about four chunks when you are not rehearsing them. A long list is already more than the head can keep.</p>
+            </div>
+            <p class="mt-space-md pt-space-xs border-t border-outline-variant font-mono-sm text-mono-sm text-outline">mm shows one thing.</p>
+          </article>
+          <article class="p-space-lg bg-surface border border-outline-variant rounded flex flex-col justify-between">
+            <div>
+              <span class="font-mono-sm text-mono-sm text-secondary block mb-space-xs">Risko &amp; Gilbert, 2016</span>
+              <h3 class="font-headline-sm text-headline-sm text-primary mb-space-xs">Write it down</h3>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Putting a task into a reliable place outside your head frees attention for the work itself. The capture has to be one line, or you will not do it mid-thought.</p>
+            </div>
+            <p class="mt-space-md pt-space-xs border-t border-outline-variant font-mono-sm text-mono-sm text-outline">mm add "…"</p>
+          </article>
+          <article class="p-space-lg bg-surface border border-outline-variant rounded flex flex-col justify-between">
+            <div>
+              <span class="font-mono-sm text-mono-sm text-secondary block mb-space-xs">Leroy, 2009</span>
+              <h3 class="font-headline-sm text-headline-sm text-primary mb-space-xs">Attention residue</h3>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Leaving a task unfinished leaves attention on it. The stack is a boundary: do the interruption, then <span class="font-mono-sm">mm done</span> puts you back.</p>
+            </div>
+            <p class="mt-space-md pt-space-xs border-t border-outline-variant font-mono-sm text-mono-sm text-outline">The way back is the command.</p>
+          </article>
+          <article class="p-space-lg bg-surface border border-outline-variant rounded flex flex-col justify-between">
+            <div>
+              <span class="font-mono-sm text-mono-sm text-secondary block mb-space-xs">Mark, office studies</span>
+              <h3 class="font-headline-sm text-headline-sm text-primary mb-space-xs">About 23 minutes</h3>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Getting back to the original task after an interruption takes on the order of twenty minutes. The queue is the written place you return to.</p>
+            </div>
+            <p class="mt-space-md pt-space-xs border-t border-outline-variant font-mono-sm text-mono-sm text-outline">The return address is already written.</p>
+          </article>
+        </div>
+        <div class="p-space-lg bg-surface-container-lowest border-l-2 border-outline border-y border-r border-outline-variant">
+          <p class="font-label-caps text-label-caps text-outline uppercase mb-space-xs">Zeigarnik</p>
+          <p class="font-body-sm text-body-sm text-on-surface-variant">The claim that people remember unfinished tasks better has not held up as a general rule. A 2025 meta-analysis found no reliable memory advantage. mm does not depend on it.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="w-full border-b border-outline-variant py-space-2xl bg-surface scroll-mt-28" id="comparison">
+      <div class="max-w-7xl mx-auto px-margin">
+        <div class="mb-space-xl">
+          <span class="font-label-caps text-label-caps text-secondary uppercase tracking-widest block mb-space-xs">Beside the other ways</span>
+          <h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary tracking-tight">Same urge to capture. A different next step.</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse border border-outline-variant text-left font-body-sm text-body-sm min-w-[720px]">
+            <thead>
+              <tr class="bg-surface-container-high border-b border-outline-variant font-label-caps text-label-caps text-on-surface-variant">
+                <th class="p-space-md border-r border-outline-variant font-medium"> </th>
+                <th class="p-space-md border-r border-outline-variant font-medium">In your head</th>
+                <th class="p-space-md border-r border-outline-variant font-medium">A todo list</th>
+                <th class="p-space-md border-r border-outline-variant font-medium">A calendar</th>
+                <th class="p-space-md border-r border-outline-variant font-medium">Notes and tabs</th>
+                <th class="p-space-md bg-surface-container-lowest text-secondary font-medium">mm</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="bg-surface">
+                <th class="p-space-md font-mono-sm text-mono-sm text-primary border-r border-outline-variant font-medium align-top">What you do next</th>
+                <td class="p-space-md text-on-surface-variant border-r border-outline-variant align-top">You rehearse the list instead of doing the work.</td>
+                <td class="p-space-md text-on-surface-variant border-r border-outline-variant align-top">It stores the tasks, then asks you to choose again.</td>
+                <td class="p-space-md text-on-surface-variant border-r border-outline-variant align-top">It decides when. Real interruptions blow the slots.</td>
+                <td class="p-space-md text-on-surface-variant border-r border-outline-variant align-top">They hold the words. They do not name what is next.</td>
+                <td class="p-space-md bg-surface-container-lowest text-primary align-top">Shows one thing. Never takes the clock.</td>
+              </tr>
+              <tr class="bg-surface-container-low">
+                <th class="p-space-md font-mono-sm text-mono-sm text-primary border-r border-outline-variant font-medium align-top">When something urgent arrives</th>
+                <td class="p-space-md text-on-surface-variant border-r border-outline-variant align-top">The old work stays in your head while you do the new one.</td>
+                <td class="p-space-md text-on-surface-variant border-r border-outline-variant align-top">Another row. The place you were is somewhere in the backlog.</td>
+                <td class="p-space-md text-on-surface-variant border-r border-outline-variant align-top">You reschedule by hand.</td>
+                <td class="p-space-md text-on-surface-variant border-r border-outline-variant align-top">Another tab, another scrap.</td>
+                <td class="p-space-md bg-surface-container-lowest text-primary align-top">mm add -p. mm done puts you back.</td>
+              </tr>
+              <tr class="bg-surface">
+                <th class="p-space-md font-mono-sm text-mono-sm text-primary border-r border-outline-variant font-medium align-top">Getting Things Done</th>
+                <td class="p-space-md text-on-surface-variant border-r border-outline-variant align-top" colspan="4">Same first move: get it out of your head. Then projects, contexts, and a weekly review.</td>
+                <td class="p-space-md bg-surface-container-lowest text-primary align-top">Stops at the three places.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="w-full border-b border-outline-variant py-space-2xl bg-surface-container-low scroll-mt-28" id="install">
+      <div class="max-w-7xl mx-auto px-margin">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl">
+          <div class="lg:col-span-6">
+            <span class="font-label-caps text-label-caps text-secondary uppercase tracking-widest block mb-space-xs">Install</span>
+            <h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary tracking-tight mb-space-sm">One file. Nothing running in the background.</h2>
+            <p class="font-body-md text-body-md text-on-surface-variant mb-space-md">mm is a Python 3.11 program. The standard library only. No pip packages, no daemon, no account. It does nothing until you type it.</p>
+            <ul class="space-y-space-sm font-mono-sm text-mono-sm text-on-surface-variant">
+              <li class="flex items-start gap-space-sm"><span class="text-secondary select-none">›</span><span>State is one file, <span class="text-primary">~/.mm/state.json</span>.</span></li>
+              <li class="flex items-start gap-space-sm"><span class="text-secondary select-none">›</span><span>A file lock and an atomic save, so two terminals do not tear the file.</span></li>
+              <li class="flex items-start gap-space-sm"><span class="text-secondary select-none">›</span><span><span class="text-primary">mm undo</span> restores the previous snapshot.</span></li>
+              <li class="flex items-start gap-space-sm"><span class="text-secondary select-none">›</span><span>Manual: <span class="text-primary">man mm</span> or <span class="text-primary">mm help</span>. Version 3.0.0. MIT.</span></li>
+            </ul>
+          </div>
+          <div class="lg:col-span-6 bg-surface-container-lowest border border-outline-variant rounded p-space-lg flex flex-col">
+            <div class="flex items-center justify-between border-b border-outline-variant pb-space-sm mb-space-md">
+              <span class="font-mono-sm text-mono-sm text-primary">source</span>
+              <span class="font-label-caps text-label-caps text-outline uppercase">~/bin/mm</span>
+            </div>
+            <pre class="bg-surface p-space-md border border-outline-variant font-mono-md text-mono-md text-primary whitespace-pre-wrap mb-space-md">git clone https://github.com/Toseef-Ahmad/mm.git
+cd mm && ./install.sh</pre>
+            <div class="font-mono-sm text-mono-sm text-on-surface-variant space-y-1 mb-space-lg">
+              <div class="text-outline"># then</div>
+              <div class="text-primary">$ mm add "CS302"</div>
+              <div class="text-outline">  + queued  1  CS302</div>
+              <div class="text-primary">$ mm</div>
+              <div class="text-outline">  →  1  CS302   active</div>
+            </div>
+            <button class="mt-auto w-full py-space-sm bg-primary text-on-primary font-label-caps text-label-caps uppercase tracking-wider hover:bg-primary-fixed-dim" id="copy-snippet" type="button">Copy install command</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="w-full py-space-2xl bg-surface scroll-mt-28" id="cheatsheet">
+      <div class="max-w-7xl mx-auto px-margin">
+        <div class="mb-space-xl pb-space-sm border-b border-outline-variant">
+          <span class="font-label-caps text-label-caps text-secondary uppercase tracking-widest block mb-space-xs">If this happens</span>
+          <h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary tracking-tight">The command for the moment.</h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md font-mono-sm text-mono-sm">
+          <div class="p-space-md bg-surface-container-low border border-outline-variant rounded flex flex-col items-start sm:flex-row sm:items-center sm:justify-between gap-space-md">
+            <div><span class="text-outline block mb-1">A gap opened. The phone is right there.</span><span class="text-on-surface">The next thing is already in the box.</span></div>
+            <code class="px-space-sm py-1 bg-surface-container-highest text-secondary border border-outline-variant shrink-0">mm</code>
+          </div>
+          <div class="p-space-md bg-surface-container-low border border-outline-variant rounded flex flex-col items-start sm:flex-row sm:items-center sm:justify-between gap-space-md">
+            <div><span class="text-outline block mb-1">An idea, while you are in the work.</span><span class="text-on-surface">It waits behind what you are doing.</span></div>
+            <code class="px-space-sm py-1 bg-surface-container-highest text-secondary border border-outline-variant shrink-0">mm add "write this up later"</code>
+          </div>
+          <div class="p-space-md bg-surface-container-low border border-secondary/60 rounded flex flex-col items-start sm:flex-row sm:items-center sm:justify-between gap-space-md">
+            <div><span class="text-secondary block mb-1">Something more important just arrived.</span><span class="text-on-surface">It goes on top. You come back.</span></div>
+            <code class="px-space-sm py-1 bg-surface-container-highest text-secondary border border-secondary shrink-0">mm add -p "prod is down"</code>
+          </div>
+          <div class="p-space-md bg-surface-container-low border border-outline-variant rounded flex flex-col items-start sm:flex-row sm:items-center sm:justify-between gap-space-md">
+            <div><span class="text-outline block mb-1">That thing is finished.</span><span class="text-on-surface">The next one comes up. You do not pick.</span></div>
+            <code class="px-space-sm py-1 bg-surface-container-highest text-secondary border border-outline-variant shrink-0">mm done</code>
+          </div>
+          <div class="p-space-md bg-surface-container-low border border-outline-variant rounded flex flex-col items-start sm:flex-row sm:items-center sm:justify-between gap-space-md">
+            <div><span class="text-outline block mb-1">You are stuck waiting on someone.</span><span class="text-on-surface">It leaves the front. The next thing comes up.</span></div>
+            <code class="px-space-sm py-1 bg-surface-container-highest text-secondary border border-outline-variant shrink-0">mm block "waiting"</code>
+          </div>
+          <div class="p-space-md bg-surface-container-low border border-outline-variant rounded flex flex-col items-start sm:flex-row sm:items-center sm:justify-between gap-space-md">
+            <div><span class="text-outline block mb-1">A small nag. Not this work.</span><span class="text-on-surface">Off the line, until you clear the drawer.</span></div>
+            <code class="px-space-sm py-1 bg-surface-container-highest text-secondary border border-outline-variant shrink-0">mm add -q "email Sam"</code>
+          </div>
+          <div class="p-space-md bg-surface-container-low border border-outline-variant rounded flex flex-col items-start sm:flex-row sm:items-center sm:justify-between gap-space-md">
+            <div><span class="text-outline block mb-1">The nags can go.</span><span class="text-on-surface">flush-quick deletes them. It does not archive them.</span></div>
+            <code class="px-space-sm py-1 bg-surface-container-highest text-secondary border border-outline-variant shrink-0">mm flush-quick</code>
+          </div>
+          <div class="p-space-md bg-surface-container-low border border-outline-variant rounded flex flex-col items-start sm:flex-row sm:items-center sm:justify-between gap-space-md">
+            <div><span class="text-outline block mb-1">That last command was wrong.</span><span class="text-on-surface">The previous snapshot comes back.</span></div>
+            <code class="px-space-sm py-1 bg-surface-container-highest text-secondary border border-outline-variant shrink-0">mm undo</code>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <footer class="wrap foot">mm · the box is empty until you type</footer>
-  <script src="/play.js?v=4"></script>
+  <footer class="w-full bg-surface-container-lowest border-t border-outline-variant py-space-xl">
+    <div class="max-w-7xl mx-auto px-margin flex flex-col md:flex-row items-start md:items-center justify-between gap-gutter">
+      <div>
+        <p class="font-label-caps text-label-caps text-secondary">mm 3.0.0 <span class="text-outline-variant">·</span> <span class="text-on-surface-variant">MIT</span></p>
+        <p class="font-mono-sm text-mono-sm text-outline mt-space-xs">Your head is for the work. The box holds the rest.</p>
+      </div>
+      <div class="flex items-center gap-space-lg font-mono-sm text-mono-sm text-on-surface-variant">
+        <a class="hover:text-primary" href="https://github.com/Toseef-Ahmad/mm">GitHub</a>
+        <a class="hover:text-primary" href="#install">Install</a>
+        <span>man mm</span>
+      </div>
+    </div>
+  </footer>
+  <script src="/play.js?v=5"></script>
 </body>
 </html>
