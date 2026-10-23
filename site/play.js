@@ -104,6 +104,26 @@
     return document.getElementById(id);
   }
 
+  function installForThisOs() {
+    var reported = (navigator.userAgentData && navigator.userAgentData.platform) || "";
+    var blob = (reported + " " + (navigator.userAgent || "") + " " + (navigator.platform || "")).toLowerCase();
+    var windows = "git clone https://github.com/Toseef-Ahmad/mm.git\ncd mm\ninstall.cmd";
+    var unix = "git clone https://github.com/Toseef-Ahmad/mm.git && cd mm && ./install.sh";
+    if (blob.indexOf("win") !== -1) return { os: "Windows", command: windows };
+    if (blob.indexOf("linux") !== -1 || blob.indexOf("android") !== -1 || blob.indexOf("cros") !== -1) {
+      return { os: "Linux", command: unix };
+    }
+    if (blob.indexOf("mac") !== -1 || blob.indexOf("iphone") !== -1 || blob.indexOf("ipad") !== -1) {
+      return { os: "macOS", command: unix };
+    }
+    return { os: "macOS / Linux", command: unix };
+  }
+
+  var installChoice = installForThisOs();
+  var install = installChoice.command;
+  if (el("install-os")) el("install-os").textContent = installChoice.os;
+  if (el("install-cmd")) el("install-cmd").textContent = install;
+
   function render(i) {
     var data = steps[i];
     el("sim-step").textContent = "STEP " + (i + 1) + " OF " + steps.length;
@@ -206,12 +226,6 @@
     });
   }
 
-  var installUnix = "git clone https://github.com/Toseef-Ahmad/mm.git && cd mm && ./install.sh";
-  var installWindows = "git clone https://github.com/Toseef-Ahmad/mm.git\ncd mm\ninstall.cmd";
-  var isWindows = /Windows/i.test(navigator.userAgent || "") || /^Win/i.test(navigator.platform || "");
-  var install = isWindows ? installWindows : installUnix;
-  var cmdEl = el("install-cmd");
-  if (cmdEl) cmdEl.textContent = install;
   el("copy-install").addEventListener("click", function () {
     copyText(install, el("copy-install"), "COPIED", "COPY");
   });
