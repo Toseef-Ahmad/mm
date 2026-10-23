@@ -46,14 +46,32 @@ The interrupt unwound. The queue is exactly what you typed.
 
 Python 3.11+. **Zero dependencies** — standard library only.
 
+macOS and Linux:
+
 ```bash
 git clone https://github.com/Toseef-Ahmad/mm.git
 cd mm && ./install.sh    # ~/bin/mm -> this clone, plus man mm
 ```
 
+Windows — Command Prompt, PowerShell, or a double-click. Three separate lines, because Windows PowerShell 5 does not accept `&&`:
+
+```bat
+git clone https://github.com/Toseef-Ahmad/mm.git
+cd mm
+install.cmd
+```
+
+That puts `mm` on your user PATH (`%USERPROFILE%\bin\mm.cmd`). Open a new terminal, then `mm add "CS302"`. If Python 3.11+ is missing, the installer downloads it with winget. The full manual is `mm help`.
+
+Git Bash can use `./install.sh`. It runs the same Windows installer. A fresh machine can paste this into PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/Toseef-Ahmad/mm/master/install.ps1 | iex
+```
+
 Or `pipx install git+https://github.com/Toseef-Ahmad/mm.git`.
 
-State is one file: `~/.mm/state.json`. Point it elsewhere with `MM_HOME`.
+State is one file: `~/.mm/state.json` (on Windows, `%USERPROFILE%\.mm\state.json`). Point it elsewhere with `MM_HOME`.
 If you used an older mm, wipe `~/.mm` yourself — leftover toml/habits files
 are ignored.
 

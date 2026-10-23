@@ -206,7 +206,12 @@
     });
   }
 
-  var install = "git clone https://github.com/Toseef-Ahmad/mm.git && cd mm && ./install.sh";
+  var installUnix = "git clone https://github.com/Toseef-Ahmad/mm.git && cd mm && ./install.sh";
+  var installWindows = "git clone https://github.com/Toseef-Ahmad/mm.git\ncd mm\ninstall.cmd";
+  var isWindows = /Windows/i.test(navigator.userAgent || "") || /^Win/i.test(navigator.platform || "");
+  var install = isWindows ? installWindows : installUnix;
+  var cmdEl = el("install-cmd");
+  if (cmdEl) cmdEl.textContent = install;
   el("copy-install").addEventListener("click", function () {
     copyText(install, el("copy-install"), "COPIED", "COPY");
   });

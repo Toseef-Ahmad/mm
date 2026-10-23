@@ -26,6 +26,8 @@ python3 -m unittest discover -s tests -v   # must be green before and after
 ./install.sh                               # ~/bin/mm -> this clone, plus man mm
 ```
 
+On Windows, run `install.cmd` from Command Prompt or PowerShell instead of `./install.sh`. Git Bash's `./install.sh` does that for you. Tests are `py -3 -m unittest discover -s tests -v`.
+
 Tests use an isolated temp directory through `mm.use_home()`, so they never
 touch your real `~/.mm`.
 

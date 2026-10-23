@@ -40,9 +40,19 @@ Bare `mm` is `mm next`.
 
 ## Install
 
+macOS and Linux:
+
 ```
 git clone https://github.com/Toseef-Ahmad/mm.git
 cd mm && ./install.sh
 ```
 
-Python 3.11+. No pip dependencies. State is one file: `~/.mm/state.json`.
+Windows (Command Prompt or PowerShell, three lines):
+
+```
+git clone https://github.com/Toseef-Ahmad/mm.git
+cd mm
+install.cmd
+```
+
+Python 3.11+. No pip dependencies. State is one file: `~/.mm/state.json` (`%USERPROFILE%\.mm\state.json` on Windows).

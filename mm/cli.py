@@ -43,7 +43,7 @@ def main():
     p = argparse.ArgumentParser(
         prog="mm",
         description="A runtime queue: add work, do the next thing, mark it done. Nothing repeats.",
-        epilog="Manual: man mm   (or mm help)",
+        epilog="Manual: mm help   (or man mm, where man is installed)",
     )
     p.add_argument("--version", action="version", version=f"mm {__version__}")
     sub = p.add_subparsers(dest="cmd")

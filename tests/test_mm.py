@@ -240,5 +240,15 @@ class TestRemovedPlanner(MMTestCase):
         self.assertEqual(self.texts("stack"), [])
 
 
+class TestUnicodeState(MMTestCase):
+    def test_unicode_task_roundtrips_as_utf8(self):
+        text = "café — 中文"
+        self.cli("add", text)
+        self.assertEqual(self.texts("queue"), [text])
+        with open(os.path.join(self.tmp, "state.json"), encoding="utf-8") as f:
+            data = json.load(f)
+        self.assertEqual(data["queue"][0]["text"], text)
+
+
 if __name__ == "__main__":
     unittest.main()

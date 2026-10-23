@@ -4,6 +4,7 @@ Notable changes per release. Dates are release dates, newest first.
 
 ## Unreleased
 
+- Windows install is `install.cmd` (or `./install.sh` from Git Bash). It puts `mm` on the user PATH, installs Python 3.11+ with winget when it is missing, and keeps task text as UTF-8.
 - The landing page is a guide: one afternoon, the three places, and how a queue differs from holding work in your head, a todo list, or a calendar.
 - The guide names the two losses: a gap that becomes a scroll, and an idea that arrives in the middle of the work.
 - The landing example plays one moment at a time, with the sentence of that moment above the box.

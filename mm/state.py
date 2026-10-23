@@ -21,7 +21,7 @@ def load():
     if not os.path.exists(P.state) or os.path.getsize(P.state) == 0:
         return copy.deepcopy(EMPTY_STATE)
     try:
-        with open(P.state) as f:
+        with open(P.state, encoding="utf-8") as f:
             data = json.load(f)
         for k, v in EMPTY_STATE.items():
             data.setdefault(k, v if not isinstance(v, (list, dict)) else type(v)())
@@ -41,7 +41,7 @@ def save(state):
     P.ensure()
     fd, tmp = tempfile.mkstemp(dir=P.dir, prefix=".state-", suffix=".tmp")
     try:
-        with os.fdopen(fd, "w") as f:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
             json.dump(state, f, indent=2)
             f.flush()
             os.fsync(f.fileno())

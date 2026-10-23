@@ -53,7 +53,7 @@
           <div class="flex items-center justify-between gap-space-md bg-surface-container-lowest border border-outline-variant px-space-md py-space-sm rounded flex-1 min-w-0">
             <div class="flex items-center gap-space-sm font-mono-md text-mono-md min-w-0">
               <span class="text-secondary select-none font-semibold shrink-0">$</span>
-              <span class="text-on-surface break-all" id="install-cmd">git clone https://github.com/Toseef-Ahmad/mm.git && cd mm && ./install.sh</span>
+              <span class="text-on-surface whitespace-pre-wrap" id="install-cmd">git clone https://github.com/Toseef-Ahmad/mm.git && cd mm && ./install.sh</span>
             </div>
             <button class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary shrink-0" id="copy-install" type="button">COPY</button>
           </div>
@@ -352,10 +352,16 @@
           <div class="lg:col-span-6 bg-surface-container-lowest border border-outline-variant rounded p-space-lg flex flex-col">
             <div class="flex items-center justify-between border-b border-outline-variant pb-space-sm mb-space-md">
               <span class="font-mono-sm text-mono-sm text-primary">source</span>
-              <span class="font-label-caps text-label-caps text-outline uppercase">~/bin/mm</span>
+              <span class="font-label-caps text-label-caps text-outline uppercase">mm on PATH</span>
             </div>
-            <pre class="bg-surface p-space-md border border-outline-variant font-mono-md text-mono-md text-primary whitespace-pre-wrap mb-space-md">git clone https://github.com/Toseef-Ahmad/mm.git
-cd mm && ./install.sh</pre>
+            <pre class="bg-surface p-space-md border border-outline-variant font-mono-md text-mono-md text-primary whitespace-pre-wrap mb-space-md">macOS / Linux
+git clone https://github.com/Toseef-Ahmad/mm.git
+cd mm && ./install.sh
+
+Windows
+git clone https://github.com/Toseef-Ahmad/mm.git
+cd mm
+install.cmd</pre>
             <div class="font-mono-sm text-mono-sm text-on-surface-variant space-y-1 mb-space-lg">
               <div class="text-outline"># then</div>
               <div class="text-primary">$ mm add "CS302"</div>
@@ -426,6 +432,6 @@ cd mm && ./install.sh</pre>
       </div>
     </div>
   </footer>
-  <script src="/play.js?v=5"></script>
+  <script src="/play.js?v=6"></script>
 </body>
 </html>
