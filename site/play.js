@@ -6,7 +6,7 @@
       response: "+ queued  1  CS302",
       explanation: "You’re about to study. Put it in the box, so your head can do the studying.",
       now: "CS302",
-      badge: "QUEUE",
+      badge: "Queue",
       hot: false,
       queue: [{ t: "1  CS302", active: true }],
       interrupts: [],
@@ -17,7 +17,7 @@
       response: "→  1  CS302   active",
       explanation: "One thing. You didn’t pick it off a list.",
       now: "CS302",
-      badge: "QUEUE",
+      badge: "Queue",
       hot: false,
       queue: [{ t: "1  CS302", active: true }],
       interrupts: [],
@@ -28,7 +28,7 @@
       response: "+ queued  2  write this up later",
       explanation: "An idea, in the middle of the work. It waits behind CS302. You stay on CS302.",
       now: "CS302",
-      badge: "QUEUE",
+      badge: "Queue",
       hot: false,
       queue: [
         { t: "1  CS302", active: true },
@@ -42,7 +42,7 @@
       response: "→  1  CS302   active",
       explanation: "A gap. The phone is right there. The box already has the next thing.",
       now: "CS302",
-      badge: "QUEUE",
+      badge: "Queue",
       hot: false,
       queue: [
         { t: "1  CS302", active: true },
@@ -56,7 +56,7 @@
       response: "! interrupt  3  prod is down",
       explanation: "Something more important. It goes on top. The study is still underneath.",
       now: "prod is down",
-      badge: "STACK",
+      badge: "Stack",
       hot: true,
       queue: [
         { t: "1  CS302", active: false },
@@ -70,7 +70,7 @@
       response: "✓ done  3  prod is down\n→  1  CS302   active",
       explanation: "The interruption is finished. You are back on the study. The idea is still behind it.",
       now: "CS302",
-      badge: "QUEUE",
+      badge: "Queue",
       hot: false,
       queue: [
         { t: "1  CS302", active: true },
@@ -84,7 +84,7 @@
       response: "+ quick  4  email Sam",
       explanation: "A small nag. It stays off the line. It never becomes the next thing.",
       now: "CS302",
-      badge: "QUEUE",
+      badge: "Queue",
       hot: false,
       queue: [
         { t: "1  CS302", active: true },
@@ -126,36 +126,32 @@
 
   function render(i) {
     var data = steps[i];
-    el("sim-step").textContent = "STEP " + (i + 1) + " OF " + steps.length;
+    el("sim-step").textContent = "Step " + (i + 1) + " of " + steps.length;
     el("sim-explanation").textContent = data.explanation;
     el("sim-command").textContent = data.command;
     el("sim-response").textContent = data.response;
-    el("sim-response").className = data.hot
-      ? "p-space-sm bg-surface-container border-2 border-secondary text-secondary font-mono-sm text-mono-sm whitespace-pre-wrap"
-      : "p-space-sm bg-surface-container border border-outline-variant text-on-surface font-mono-sm text-mono-sm whitespace-pre-wrap";
+    el("sim-response").className = data.hot ? "term-response is-hot" : "term-response";
 
     el("state-now-text").textContent = data.now;
     el("state-now-badge").textContent = data.badge;
-    el("state-now-card").className = data.hot
-      ? "p-space-md bg-surface-container-high border-2 border-secondary text-secondary font-mono-md text-mono-md flex items-start gap-space-sm"
-      : "p-space-md bg-surface-container border border-outline-variant text-primary font-mono-md text-mono-md flex items-start gap-space-sm";
+    el("state-now-card").className = data.hot ? "state-now-card is-hot" : "state-now-card";
 
     var intrList = el("state-intr-list");
     var intrBox = el("state-intr-box");
     el("state-intr-count").textContent = data.interrupts.length + (data.interrupts.length === 1 ? " item" : " items");
     intrList.textContent = "";
     if (data.interrupts.length) {
-      intrBox.classList.add("border-secondary");
+      intrBox.classList.add("has-items");
       data.interrupts.forEach(function (line) {
         var row = document.createElement("div");
-        row.className = "text-secondary font-semibold";
+        row.className = "is-hot";
         row.textContent = line;
         intrList.appendChild(row);
       });
     } else {
-      intrBox.classList.remove("border-secondary");
+      intrBox.classList.remove("has-items");
       var empty = document.createElement("span");
-      empty.className = "italic text-outline";
+      empty.className = "is-empty";
       empty.textContent = "—";
       intrList.appendChild(empty);
     }
@@ -165,7 +161,7 @@
     el("state-queue-count").textContent = data.queue.length + (data.queue.length === 1 ? " item" : " items");
     data.queue.forEach(function (item) {
       var row = document.createElement("div");
-      row.className = item.active ? "text-primary font-medium" : "text-on-surface-variant";
+      row.className = item.active ? "is-active" : "";
       row.textContent = item.t + (item.active ? "   active" : "");
       queueList.appendChild(row);
     });
@@ -175,13 +171,12 @@
     el("state-quick-count").textContent = data.quick.length + (data.quick.length === 1 ? " item" : " items");
     if (!data.quick.length) {
       var qe = document.createElement("span");
-      qe.className = "italic text-outline";
+      qe.className = "is-empty";
       qe.textContent = "—";
       quickList.appendChild(qe);
     } else {
       data.quick.forEach(function (line) {
         var row = document.createElement("div");
-        row.className = "text-on-surface-variant";
         row.textContent = line;
         quickList.appendChild(row);
       });
@@ -195,14 +190,14 @@
       render(index);
     }, HOLD);
     playing = true;
-    el("sim-toggle").textContent = "PAUSE";
+    el("sim-toggle").textContent = "Pause";
   }
 
   function stop() {
     clearInterval(timer);
     timer = null;
     playing = false;
-    el("sim-toggle").textContent = "PLAY";
+    el("sim-toggle").textContent = "Play";
   }
 
   el("sim-toggle").addEventListener("click", function () {
@@ -227,10 +222,10 @@
   }
 
   el("copy-install").addEventListener("click", function () {
-    copyText(install, el("copy-install"), "COPIED", "COPY");
+    copyText(install, el("copy-install"), "Copied", "Copy");
   });
   el("copy-snippet").addEventListener("click", function () {
-    copyText(install, el("copy-snippet"), "COPIED", "COPY INSTALL COMMAND");
+    copyText(install, el("copy-snippet"), "Copied", "Copy install command");
   });
 
   render(0);
